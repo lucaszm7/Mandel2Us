@@ -5,6 +5,7 @@
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 
+#include <fstream>
 
 class Example : public olc::PixelGameEngine
 {
@@ -31,15 +32,10 @@ public:
 	}
 };
 
-struct ComplexNumber
-{
-    float r;
-    float i;
-};
-
 int main(int argc, char** argv)
 {
     MPI::Init(argc, argv);
+
 
     int rank, size;
     char name[MPI_MAX_PROCESSOR_NAME];
@@ -49,6 +45,19 @@ int main(int argc, char** argv)
     rank = MPI::COMM_WORLD.Get_rank();
     MPI::Get_processor_name(name, namet);
     std::cout << "Has " << size << " nodes in " << name << " computer, i'm node " << rank << "\n";
+
+    std::ofstream *OutputFile;
+
+    if(rank == 0)
+    {
+        OutputFile = new std::ofstream("out.ppm");
+        *OutputFile << "P3\n" << "256 256\n" << "256\n";
+
+        for (int x = 0; x < 256; x++)
+			for (int y = 0; y < 256; y++)
+				*OutputFile << (rand() % 255) << " " << (rand() % 255) << " " << (rand()% 255) << std::endl;	
+		
+    }
 
     if(rank == 0)
     {
@@ -77,7 +86,7 @@ int main(int argc, char** argv)
     if (rank == 0)
     {
         Example demo;
-        if (demo.Construct(256, 240, 4, 4))
+        if (demo.Construct(256, 256, 4, 4))
             demo.Start();
     }
 
