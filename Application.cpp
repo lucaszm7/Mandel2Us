@@ -31,22 +31,43 @@ public:
 	}
 };
 
+struct ComplexNumber
+{
+    float r;
+    float i;
+};
 
 int main(int argc, char** argv)
 {
+    MPI::Init(argc, argv);
+
     int rank, size;
     char name[MPI_MAX_PROCESSOR_NAME];
     int namet;
 
-    MPI::Init(argc, argv);
-
     size = MPI::COMM_WORLD.Get_size();
     rank = MPI::COMM_WORLD.Get_rank();
-    MPI::COMM_WORLD.Get_name(name, namet);
+    MPI::Get_processor_name(name, namet);
     std::cout << "Has " << size << " nodes in " << name << " computer, i'm node " << rank << "\n";
+
+    if(rank == 0)
+    {
+        int b;
+        MPI::COMM_WORLD.Recv((void*)&b, 1, MPI::INT, 1, MPI::ANY_TAG);
+        std::cout << "I " << rank << " receive " << b << " from node 1!\n";
+    }
+
+    else
+    {
+        int a = 10;
+        MPI::COMM_WORLD.Send((void*)&a, 1, MPI::INT, 0, 0);
+        std::cout << "I " << rank << " have send " << a << " to node 0!\n";
+    }
 
     MPI::Finalize();
 
+    // TODO: ver se openmp esta mesmo funcionando
+    //       tira o olcengine e verifica no gerenciador
     #pragma omp parallel
     {
         std::cout << "Num of threads " << omp_get_num_threads() << "\n";
