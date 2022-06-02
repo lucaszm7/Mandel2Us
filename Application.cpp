@@ -13,10 +13,10 @@
 #include "olcPixelGameEngine.h"
 
 
-class Example : public olc::PixelGameEngine
+class MandelbrotFractal : public olc::PixelGameEngine
 {
 public:
-	Example()
+	MandelbrotFractal()
 	{
 		sAppName = "Example";
 	}
