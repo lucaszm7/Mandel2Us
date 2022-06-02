@@ -7,12 +7,6 @@
 
 #include <fstream>
 
-float map(float x, float oldLow, float oldHigh, float newLow, float newHigh)
-{
-    float oldRange = (x - oldLow)/(oldHigh - oldLow);
-    return oldRange * (newHigh - newLow) + newLow;
-}
-
 class Example : public olc::PixelGameEngine
 {
 public:
@@ -21,35 +15,46 @@ public:
 		sAppName = "Example";
 	}
 
+protected:
+    int iWidth;
+    int iHeight;
+    int iMaxIteration;
+
+public:
+    float map(float x, float oldLow, float oldHigh, float newLow, float newHigh)
+    {
+        float oldRange = (x - oldLow)/(oldHigh - oldLow);
+        return oldRange * (newHigh - newLow) + newLow;
+    }
+
 public:
 	bool OnUserCreate() override
 	{
-		// Called once at the start, so create things here
+		iWidth = ScreenWidth();
+        iHeight = ScreenHeight();
+        iMaxIteration = 100;
 		return true;
 	}
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
 		// called once per frame
-		int width = ScreenWidth();
-        int height = ScreenHeight();
-
-        int maxIteration = 100;
+		
 
         // #pragma omp parallel for
-        for (int x = 0; x < width; x++)
+        for (int x = 0; x < iWidth; x++)
         {
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < iHeight; y++)
             {
-                float a = map(x, 0, width, -2, 2);
-                float b = map(y, 0, height, -2, 2);
+                float a = map(x, 0, iWidth, -2, 1);
+                float b = map(y, 0, iHeight, -2, 1);
 
                 int n = 0;
 
                 float ca = a;
                 float cb = b;
 
-                while (n < maxIteration)
+                while (n < iMaxIteration)
                 {
                     // z1 = z0^2 + c
                     // z2 = c^2 + c
@@ -84,7 +89,6 @@ public:
 int main(int argc, char** argv)
 {
     MPI::Init(argc, argv);
-
 
     int rank, size;
     char name[MPI_MAX_PROCESSOR_NAME];
