@@ -70,6 +70,13 @@ public:
                     n++;
                 }
 
+                // How to Draw the Fractal?
+                float bright = map(n, 0, 100, 0, 255);
+                if (n == 100) bright = 0;
+
+                Draw(x, y, olc::Pixel(bright, bright, bright, 255));	
+            }
+        }
 		return true;
 	}
 };
