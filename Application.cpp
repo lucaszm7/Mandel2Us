@@ -122,7 +122,7 @@ int main(int argc, char** argv)
     if (rank == 0)
     {
         Example demo;
-        if (demo.Construct(256, 256, 4, 4))
+        if (demo.Construct(600, 600, 1, 1))
             demo.Start();
     }
 
