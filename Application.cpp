@@ -42,25 +42,27 @@ public:
 		return true;
 	}
 
-	bool OnUserUpdate(float fElapsedTime) override
-	{
-		// called once per frame
-		
+    void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
+                       const olc::vd2d& frac_tl, const olc::vd2d& frac_br)
+    {
+        std::cout << "====================================\n";
+        std::cout << pixel_tl << "\n" << pixel_br << "\n";
+        std::cout << frac_tl << "\n" << frac_br << "\n";
 
         // #pragma omp parallel for
-        for (int x = 0; x < iWidth; x++)
+        for (int x = pixel_tl.x; x < pixel_br.x; x++)
         {
-            for (int y = 0; y < iHeight; y++)
+            for (int y = pixel_tl.y; y < pixel_br.y; y++)
             {
-                float a = map(x, 0, iWidth, -2, 1);
-                float b = map(y, 0, iHeight, -2, 1);
+                float a = map(x, pixel_tl.x, pixel_br.x, frac_tl.x, frac_br.y);
+                float b = map(y, pixel_tl.y, pixel_br.y, frac_tl.y, frac_br.y);
 
                 int n = 0;
 
                 float ca = a;
                 float cb = b;
 
-                while (n < iMaxIteration)
+                while (n < nMaxIteration)
                 {
                     // z1 = z0^2 + c
                     // z2 = c^2 + c
@@ -80,6 +82,10 @@ public:
 
                     n++;
                 }
+                pFractalIterations[(x * (int)ScreenWidth()) + y] = n;
+            }
+        }
+    }
 
                 // How to Draw the Fractal?
                 float bright = map(n, 0, 100, 0, 255);
