@@ -98,25 +98,65 @@ public:
 	}
 };
 
-int main(int argc, char** argv)
-{
-    MPI::Init(argc, argv);
+	bool OnUserUpdate(float fElapsedTime) override
+	{
+		// Panning and Zoomig, credits to @OneLoneCoder who i'am inpired for
+        olc::vd2d vMouse = {(double)GetMouseX(), (double)GetMouseY()};
 
-    int rank, size;
-    char name[MPI_MAX_PROCESSOR_NAME];
-    int namet;
+        // Get the position of the mouse and move the world Final Pos - Inital Pos
+        // This make us drag Around the Screen Space, with the OffSet variable
+        if(GetMouse(2).bPressed)
+        {
+            vStartPan = vMouse;
+        }
 
-    size = MPI::COMM_WORLD.Get_size();
-    rank = MPI::COMM_WORLD.Get_rank();
-    MPI::Get_processor_name(name, namet);
-    std::cout << "Has " << size << " nodes in " << name << " computer, i'm node " << rank << "\n";
+        if(GetMouse(2).bHeld)
+        {
+            vOffset -= (vMouse - vStartPan) / vScale;
+            vStartPan = vMouse;
+        }
 
-    if(rank == 0)
-    {
-        int b;
-        MPI::COMM_WORLD.Recv((void*)&b, 1, MPI::INT, 1, MPI::ANY_TAG);
-        std::cout << "I " << rank << " receive " << b << " from node 1!\n";
-    }
+        olc::vd2d vMouseBeforeZoom;
+        ScreenToWorld(vMouse, vMouseBeforeZoom);
+
+        if (GetKey(olc::Key::E).bHeld) vScale *= 1.1;
+		if (GetKey(olc::Key::Q).bHeld) vScale *= 0.9;
+		
+		olc::vd2d vMouseAfterZoom;
+		ScreenToWorld(vMouse, vMouseAfterZoom);
+		vOffset += (vMouseBeforeZoom - vMouseAfterZoom);
+
+        // Now we have a smaller screen, and want to map to the world coord
+        
+        olc::vi2d pixel_tl = {  0,  0 };
+        olc::vi2d pixel_br = {  ScreenWidth(),  ScreenHeight() };
+
+        olc::vd2d frac_tl = { -2.0, -1.0 };
+        olc::vd2d frac_br = {  1.0,  1.0 };
+
+        // Then in the limites we now have the cartesian coords we want to draw
+        // cartesian plane starting at top-left to bottom-right
+        ScreenToWorld(pixel_tl, frac_tl);
+        ScreenToWorld(pixel_br, frac_br);
+
+        // Select Mode
+        if (GetKey(olc::Key::K0).bPressed) nMode = 0;
+        if (GetKey(olc::Key::K1).bPressed) nMode = 1;
+        // Modify the max iteration on the fly
+        if (GetKey(olc::UP).bPressed) nMaxIteration += 32;
+		if (GetKey(olc::DOWN).bPressed) nMaxIteration -= 32;
+        if (nMaxIteration < 32) nMaxIteration = 32;
+
+        // Cont the time with chrono clock
+        auto tStart = std::chrono::high_resolution_clock::now();
+
+        switch (nMode)
+        {
+            case 0: CreateFractal(pixel_tl, pixel_br,
+                                  frac_tl, frac_br); break;
+            case 1: CreateFractalComplex(pixel_tl, pixel_br,
+                                  frac_tl, frac_br); break;
+        }
 
     else
     {
