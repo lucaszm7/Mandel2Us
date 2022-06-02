@@ -31,9 +31,45 @@ public:
 	bool OnUserUpdate(float fElapsedTime) override
 	{
 		// called once per frame
-		for (int x = 0; x < ScreenWidth(); x++)
-			for (int y = 0; y < ScreenHeight(); y++)
-				Draw(x, y, olc::Pixel(rand() % 255, rand() % 255, rand()% 255));	
+		int width = ScreenWidth();
+        int height = ScreenHeight();
+
+        int maxIteration = 100;
+
+        // #pragma omp parallel for
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                float a = map(x, 0, width, -2, 2);
+                float b = map(y, 0, height, -2, 2);
+
+                int n = 0;
+
+                float ca = a;
+                float cb = b;
+
+                while (n < maxIteration)
+                {
+                    // z1 = z0^2 + c
+                    // z2 = c^2 + c
+                    //      c^2 = a^2 - b^2 + 2abi
+
+                    // C^2
+                    float aa = a*a - b*b;
+                    float bb = 2 * a * b;
+
+                    // C^2 + C
+                    a = aa + ca;
+                    b = bb + cb;
+
+                    // It diverges, or not...
+                    if (a + b > 16)
+                        break;
+
+                    n++;
+                }
+
 		return true;
 	}
 };
