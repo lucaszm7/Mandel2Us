@@ -85,16 +85,30 @@ public:
         }
     }
 
-                // How to Draw the Fractal?
-                float bright = map(n, 0, 100, 0, 255);
-                if (n == 100) bright = 0;
+    void CreateFractalComplex(const olc::vi2d& pix_tl, const olc::vi2d& pix_br, 
+                              const olc::vd2d& frac_tl, const olc::vd2d& frac_br)
+	{
+		double x_scale = (frac_br.x - frac_tl.x) / (double(pix_br.x) - double(pix_tl.x));
+		double y_scale = (frac_br.y - frac_tl.y) / (double(pix_br.y) - double(pix_tl.y));
+		
+        for (int x = pix_tl.x; x < pix_br.x; x++)
+		{
+		    for (int y = pix_tl.y; y < pix_br.y; y++)
+			{
+				std::complex<double> c(x * x_scale + frac_tl.x, y * y_scale + frac_tl.y);
+				std::complex<double> z(0, 0);
 
-                Draw(x, y, olc::Pixel(bright, bright, bright, 255));	
-            }
-        }
-		return true;
+				int n = 0;
+				while (abs(z) < 2.0 && n < nMaxIteration)
+				{
+					z = (z * z) + c;
+					n++;
+				}
+
+				pFractalIterations[x * ScreenWidth() + y] = n;
+			}
+		}
 	}
-};
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
