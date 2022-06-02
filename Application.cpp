@@ -7,6 +7,12 @@
 
 #include <fstream>
 
+float map(float x, float oldLow, float oldHigh, float newLow, float newHigh)
+{
+    float oldRange = (x - oldLow)/(oldHigh - oldLow);
+    return oldRange * (newHigh - newLow) + newLow;
+}
+
 class Example : public olc::PixelGameEngine
 {
 public:
