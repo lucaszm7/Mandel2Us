@@ -178,7 +178,11 @@ public:
             }
 		}
 
-    MPI::Finalize();
+        DrawString(0, 30, "Time Taken: " + std::to_string(fTime.count()) + "s", olc::WHITE, 3);
+		DrawString(0, 60, "Iterations: " + std::to_string(nMaxIteration), olc::WHITE, 3);
+
+		return true;
+	}
 
     // TODO: ver se openmp esta mesmo funcionando
     //       tira o olcengine e verifica no gerenciador
