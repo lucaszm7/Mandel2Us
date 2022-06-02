@@ -192,12 +192,20 @@ public:
         std::cout << "i'm thread " << omp_get_thread_num() << "\n";
     }
 
-    if (rank == 0)
+// Pan and Zoom Created by the channel @OneLoneCoder
+protected:
+    // Pan & Zoom variables
+	olc::vd2d vOffset = { 0.0, 0.0 };
+	olc::vd2d vStartPan = { 0.0, 0.0 };
+	olc::vd2d vScale = { 1280.0 / 2.0, 720.0 };
+
+    // Converte coords from Screen Space to World Space
+    void ScreenToWorld(const olc::vi2d& n, olc::vd2d& v)
     {
-        Example demo;
-        if (demo.Construct(600, 600, 1, 1))
-            demo.Start();
+        v.x = (double)(n.x) / vScale.x + vOffset.x;
+        v.y = (double)(n.y) / vScale.y + vOffset.y;
     }
+};
 
 
     return 0;
