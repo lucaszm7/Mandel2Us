@@ -158,12 +158,25 @@ public:
                                   frac_tl, frac_br); break;
         }
 
-    else
-    {
-        int a = 10;
-        MPI::COMM_WORLD.Send((void*)&a, 1, MPI::INT, 0, 0);
-        std::cout << "I " << rank << " have send " << a << " to node 0!\n";
-    }
+        auto tEnd = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> fTime = tEnd - tStart;
+
+        // Render result to screen
+		for (int x = 0; x < ScreenWidth(); x++)
+		{
+			for (int y = 0; y < ScreenHeight(); y++)
+			{
+				int n = pFractalIterations[x * ScreenWidth() + y];
+				// Coloring Algorithm - Picked from https://solarianprogrammer.com/2013/02/28/mandelbrot-set-cpp-11/
+                double t = (double)n/(double)nMaxIteration;
+            	// Use smooth polynomials for r, g, b
+            	int rr = (int)(9*(1-t)*t*t*t*255);
+            	int rg = (int)(15*(1-t)*(1-t)*t*t*255);
+            	int rb =  (int)(8.5*(1-t)*(1-t)*(1-t)*t*255);
+
+                Draw(x, y, olc::Pixel(rr, rg, rb, 255));	
+            }
+		}
 
     MPI::Finalize();
 
