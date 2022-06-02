@@ -1,11 +1,17 @@
+// Standart Stuff
 #include <iostream>
+#include <chrono>
+#include <complex>
+
+// Parallelization Stuff
 #include <omp.h>
 #include <pthread.h>
-#include "mpi.h"
+// #include "mpi.h"
+
+// Drawing Stuff
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 
-#include <fstream>
 
 class Example : public olc::PixelGameEngine
 {
