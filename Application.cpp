@@ -22,23 +22,21 @@ public:
 	}
 
 protected:
-    int iWidth;
-    int iHeight;
-    int iMaxIteration;
 
-public:
-    float map(float x, float oldLow, float oldHigh, float newLow, float newHigh)
-    {
-        float oldRange = (x - oldLow)/(oldHigh - oldLow);
-        return oldRange * (newHigh - newLow) + newLow;
-    }
+    int nWidth;
+    int nHeight;
+
+    int nMaxIteration = 32;
+    int nMode = 0;
+
+    int* pFractalIterations;
 
 public:
 	bool OnUserCreate() override
 	{
-		iWidth = ScreenWidth();
-        iHeight = ScreenHeight();
-        iMaxIteration = 100;
+		nWidth = ScreenWidth();
+        nHeight = ScreenHeight();
+        pFractalIterations = new int[nWidth * nHeight]{ 0 };
 		return true;
 	}
 
@@ -184,12 +182,12 @@ public:
 		return true;
 	}
 
-    // TODO: ver se openmp esta mesmo funcionando
-    //       tira o olcengine e verifica no gerenciador
-    #pragma omp parallel
+protected:
+
+    float map(float x, float oldLow, float oldHigh, float newLow, float newHigh)
     {
-        std::cout << "Num of threads " << omp_get_num_threads() << "\n";
-        std::cout << "i'm thread " << omp_get_thread_num() << "\n";
+        float oldRange = (x - oldLow)/(oldHigh - oldLow);
+        return oldRange * (newHigh - newLow) + newLow;
     }
 
 // Pan and Zoom Created by the channel @OneLoneCoder
