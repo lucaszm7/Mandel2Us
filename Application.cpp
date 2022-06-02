@@ -207,6 +207,11 @@ protected:
     }
 };
 
+int main(int argc, char** argv)
+{
+    MandelbrotFractal demo;
+    if (demo.Construct(1280, 720, 1, 1, false, false))
+        demo.Start();
 
     return 0;
 }
