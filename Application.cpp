@@ -52,19 +52,6 @@ int main(int argc, char** argv)
     MPI::Get_processor_name(name, namet);
     std::cout << "Has " << size << " nodes in " << name << " computer, i'm node " << rank << "\n";
 
-    std::ofstream *OutputFile;
-
-    if(rank == 0)
-    {
-        OutputFile = new std::ofstream("out.ppm");
-        *OutputFile << "P3\n" << "256 256\n" << "256\n";
-
-        for (int x = 0; x < 256; x++)
-			for (int y = 0; y < 256; y++)
-				*OutputFile << (rand() % 255) << " " << (rand() % 255) << " " << (rand()% 255) << std::endl;	
-		
-    }
-
     if(rank == 0)
     {
         int b;
