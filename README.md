@@ -8,3 +8,8 @@
 
 ## Rodar
 > mpirun --hostfile hosts ./app
+
+# TODO
+- MakeFile
+- Separate regions of Mandelbrot Between computers
+- Already paralelize with OpenMP, but has to really get better.
