@@ -1,5 +1,7 @@
 # Fractal de Mandelbrot construido em C++ com MPI e OpenMP, e a parte gráfica com olcPixelGameEngine
 
+![mandelbrot_compimido_265_medio_AdobeCreativeCloudExpress](https://user-images.githubusercontent.com/42661760/171763161-525cf337-887e-4b70-b207-8ca7c120337d.gif)
+
 ## Build para Linux
 > sudo apt-get install build-essential libglu1-mesa-dev libpng-dev
 
