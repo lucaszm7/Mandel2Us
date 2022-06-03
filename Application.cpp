@@ -41,19 +41,19 @@ public:
 	}
 
     void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
-                       const olc::vd2d& frac_tl, const olc::vd2d& frac_br)
+                       const olc::vd2d& frac_real, const olc::vd2d& frac_imag)
     {
-        std::cout << "====================================\n";
-        std::cout << pixel_tl << "\n" << pixel_br << "\n";
-        std::cout << frac_tl << "\n" << frac_br << "\n";
+        // std::cout << "====================================\n";
+        // std::cout << "Pixel Top-Left: " << pixel_tl << "\nPixel Bottom-Right: " << pixel_br << "\n";
+        // std::cout << "Frac Real: " << frac_real << "\nFrac Imaginary: " <<  frac_imag << "\n";
 
-        // #pragma omp parallel for
+        #pragma omp parallel for
         for (int x = pixel_tl.x; x < pixel_br.x; x++)
         {
             for (int y = pixel_tl.y; y < pixel_br.y; y++)
             {
-                float a = map(x, pixel_tl.x, pixel_br.x, frac_tl.x, frac_br.y);
-                float b = map(y, pixel_tl.y, pixel_br.y, frac_tl.y, frac_br.y);
+                float a = map(x, pixel_tl.x, pixel_br.x, frac_real.x, frac_real.y);
+                float b = map(y, pixel_tl.y, pixel_br.y, frac_imag.x, frac_imag.y);
 
                 int n = 0;
 
@@ -123,8 +123,11 @@ public:
 
         // Then in the limites we now have the cartesian coords we want to draw
         // cartesian plane starting at top-left to bottom-right
-        ScreenToWorld(pixel_tl, frac_tl);
-        ScreenToWorld(pixel_br, frac_br);
+
+        olc::vd2d frac_real;
+        olc::vd2d frac_imag;
+
+        ScreenToFrac(pixel_tl, pixel_br, frac_tl, frac_br, frac_real, frac_imag);
 
         // Select Mode
         if (GetKey(olc::Key::K0).bPressed) nMode = 0;
@@ -140,9 +143,7 @@ public:
         switch (nMode)
         {
             case 0: CreateFractal(pixel_tl, pixel_br,
-                                  frac_tl, frac_br); break;
-            case 1: CreateFractalComplex(pixel_tl, pixel_br,
-                                  frac_tl, frac_br); break;
+                                  frac_real, frac_imag); break;
         }
 
         auto tEnd = std::chrono::high_resolution_clock::now();
@@ -173,9 +174,9 @@ public:
 
 protected:
 
-    float map(float x, float oldLow, float oldHigh, float newLow, float newHigh)
+    double map(double x, double oldLow, double oldHigh, double newLow, double newHigh)
     {
-        float oldRange = (x - oldLow)/(oldHigh - oldLow);
+        double oldRange = (x - oldLow)/(oldHigh - oldLow);
         return oldRange * (newHigh - newLow) + newLow;
     }
 
@@ -230,7 +231,7 @@ protected:
 int main(int argc, char** argv)
 {
     MandelbrotFractal demo;
-    if (demo.Construct(1280, 720, 1, 1, false, false))
+    if (demo.Construct(400, 400, 2, 2, false, false))
         demo.Start();
 
     return 0;
