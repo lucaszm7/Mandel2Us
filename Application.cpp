@@ -92,12 +92,12 @@ public:
 
         // Get the position of the mouse and move the world Final Pos - Inital Pos
         // This make us drag Around the Screen Space, with the OffSet variable
-        if(GetMouse(2).bPressed)
+        if(GetMouse(0).bPressed)
         {
             vStartPan = vMouse;
         }
 
-        if(GetMouse(2).bHeld)
+        if(GetMouse(0).bHeld)
         {
             vOffset -= (vMouse - vStartPan) / vScale;
             vStartPan = vMouse;
