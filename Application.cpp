@@ -184,13 +184,46 @@ protected:
     // Pan & Zoom variables
 	olc::vd2d vOffset = { 0.0, 0.0 };
 	olc::vd2d vStartPan = { 0.0, 0.0 };
-	olc::vd2d vScale = { 1280.0 / 2.0, 720.0 };
+	olc::vd2d vScale = { 1.0, 1.0 };
+
+    void ScreenToWorld(const olc::vi2d& n, olc::vd2d& v)
+	{
+		v.x = (double)(n.x) / vScale.x + vOffset.x;
+		v.y = (double)(n.y) / vScale.y + vOffset.y;
+	}
 
     // Converte coords from Screen Space to World Space
-    void ScreenToWorld(const olc::vi2d& n, olc::vd2d& v)
+    void ScreenToFrac(const olc::vi2d& screen_tl_before, const olc::vi2d& screen_br_before, 
+                           const olc::vd2d& world_tl_before, const olc::vd2d& world_br_before, 
+                           olc::vd2d& world_real_after, olc::vd2d& world_imag_after)
     {
-        v.x = (double)(n.x) / vScale.x + vOffset.x;
-        v.y = (double)(n.y) / vScale.y + vOffset.y;
+        // v.x = ((double)(n.x) / vScale.x) + vOffset.x;
+        // v.y = ((double)(n.y) / vScale.y) + vOffset.y;
+
+        // std::cout << "OFFSET: " << vOffset << "\nSCALE: " << vScale << "\n";
+
+        olc::vd2d screen_tl_after;
+        ScreenToWorld(screen_tl_before, screen_tl_after);
+        olc::vd2d screen_br_after;
+        ScreenToWorld(screen_br_before, screen_br_after);
+        
+        // std::cout << "+++++++++++++++++++++++++++++++++++++++++" << "\n";
+        // std::cout << "Screen TL Before: " << screen_tl_before << "\n";
+        // std::cout << "Screen BR Before: " << screen_br_before << "\n";
+        // std::cout << "World TL Before: " << world_tl_before << "\n";
+        // std::cout << "World BR Before: " << world_br_before << "\n";
+        // std::cout << "Screen TL After: " << screen_tl_after << "\n";
+        // std::cout << "Screen BR After: " << screen_br_after << "\n";
+        
+        world_real_after.x = map(screen_tl_after.x, (double)screen_tl_before.x, (double)screen_br_before.x, world_tl_before.x, world_br_before.x);
+        world_real_after.y = map(screen_br_after.x, (double)screen_tl_before.x, (double)screen_br_before.x, world_tl_before.x, world_br_before.x);
+
+        world_imag_after.x = map(screen_tl_after.y, (double)screen_tl_before.y, (double)screen_br_before.y, world_tl_before.y, world_br_before.y);
+        world_imag_after.y = map(screen_br_after.y, (double)screen_tl_before.y, (double)screen_br_before.y, world_tl_before.y, world_br_before.y);
+
+        // std::cout << "World Real After: " << world_real_after << "\n";
+        // std::cout << "World Imag After: " << world_imag_after << "\n";
+
     }
 };
 
