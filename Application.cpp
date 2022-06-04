@@ -83,12 +83,20 @@ protected:
 
     unsigned int* pFractalIterations;
 
+    // MPI Coord stuff
+    int nMyRank, nNodeSize;
+
 public:
 	bool OnUserCreate() override
 	{
 		nWidth = ScreenWidth();
         nHeight = ScreenHeight();
         pFractalIterations = new unsigned int[nWidth * nHeight]{ 0 };
+
+        // MPI
+         nNodeSize = MPI::COMM_WORLD.Get_size();
+        nMyRank = MPI::COMM_WORLD.Get_rank();
+
 		return true;
 	}
 
@@ -145,13 +153,28 @@ public:
 		if (GetKey(olc::DOWN).bPressed) nMaxIteration -= 32;
         if (nMaxIteration < 32) nMaxIteration = 32;
 
+        // Divide Fractal
+        {
+            double pParam[8];
+            pParam[0] = pixel_tl.x;
+            pParam[1] = pixel_tl.y;
+            pParam[2] = pixel_br.x / 2.0;
+            pParam[3] = pixel_br.y;
+            pParam[4] = frac_real.x;
+            pParam[5] = frac_real.y / 2.0;
+            pParam[6] = frac_imag.x;
+            pParam[7] = frac_imag.y;
+            MPI::COMM_WORLD.Send((void*)pParam, 8, MPI::DOUBLE,
+                             1, 0);
+        }
+
         // Cont the time with chrono clock
         auto tStart = std::chrono::high_resolution_clock::now();
 
         switch (nMode)
         {
-            case 0: CreateFractal(pixel_tl, pixel_br,
-                                  frac_real, frac_imag,
+            case 0: CreateFractal({pixel_br.x / 2.0, pixel_tl.y}, pixel_br,
+                                  {frac_real.x, frac_real.y / 2.0}, frac_imag,
                                   pFractalIterations, nMaxIteration); break;
         }
 
@@ -231,10 +254,46 @@ protected:
 
 int main(int argc, char** argv)
 {
-    MPI::Init();
-    MandelbrotFractal demo;
-    if (demo.Construct(900, 900, 1, 1, false, false))
-        demo.Start();
+    MPI::Init(argc, argv);
+
+    int nMyRank, nNodeSize;
+    char sComputerName[MPI::MAX_PROCESSOR_NAME];
+    int nComputerName;
+
+    nNodeSize = MPI::COMM_WORLD.Get_size();
+    nMyRank = MPI::COMM_WORLD.Get_rank();
+
+    MPI::Get_processor_name(sComputerName, nComputerName);
+
+    // Just master node create window
+    if(nMyRank == 0)
+    {
+        MandelbrotFractal demo;
+        if (demo.Construct(900, 900, 1, 1, false, false))
+            demo.Start();
+    }
+
+    // Other nodes just do the computation
+    else
+    {
+        double pParam[8];
+        unsigned int* pFractalIterations = new unsigned int[900 * 900];
+        {
+            MPI::COMM_WORLD.Recv((void*)pParam, 8, MPI::DOUBLE,
+                                0, MPI::ANY_TAG);
+            CreateFractal({pParam[0], pParam[1]}, {pParam[2], pParam[3]}, 
+                        {pParam[4], pParam[5]}, {pParam[6], pParam[7]}, pFractalIterations, 32);
+            std::cout << "For parameters: \n";
+            for(int i = 0; i < 8; ++i)
+                std::cout << pParam[i] << "\n";
+            std::cout << "I create the fractal:\n";
+            // for(int i = 0; i < (900*900) / 2; ++i)
+            //     std::cout << pFractalIterations[i] << ",";
+
+        }
+    }
+
+    MPI::Finalize();
 
     return 0;
 }
