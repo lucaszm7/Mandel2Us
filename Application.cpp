@@ -6,12 +6,64 @@
 // Parallelization Stuff
 #include <omp.h>
 #include <pthread.h>
-// #include "mpi.h"
+#include "mpi.h"
 
 // Drawing Stuff
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 
+// Paralelized sections
+double map(double x, double oldLow, double oldHigh, double newLow, double newHigh)
+{
+    double oldRange = (x - oldLow)/(oldHigh - oldLow);
+    return oldRange * (newHigh - newLow) + newLow;
+}
+
+void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
+                       const olc::vd2d& frac_real, const olc::vd2d& frac_imag,
+                       unsigned int* pFractalIterations, unsigned int nMaxIteration)
+{
+    // std::cout << "====================================\n";
+    // std::cout << "Pixel Top-Left: " << pixel_tl << "\nPixel Bottom-Right: " << pixel_br << "\n";
+    // std::cout << "Frac Real: " << frac_real << "\nFrac Imaginary: " <<  frac_imag << "\n";
+
+    #pragma omp parallel for
+    for (int x = pixel_tl.x; x < pixel_br.x; x++)
+    {
+        for (int y = pixel_tl.y; y < pixel_br.y; y++)
+        {
+            double a = map(x, pixel_tl.x, pixel_br.x, frac_real.x, frac_real.y);
+            double b = map(y, pixel_tl.y, pixel_br.y, frac_imag.x, frac_imag.y);
+
+            int n = 0;
+
+            double ca = a;
+            double cb = b;
+
+            while (n < nMaxIteration)
+            {
+                // z1 = z0^2 + c
+                // z2 = c^2 + c
+                //      c^2 = a^2 - b^2 + 2abi
+
+                // C^2
+                double aa = a*a - b*b;
+                double bb = 2 * a * b;
+
+                // C^2 + C
+                a = aa + ca;
+                b = bb + cb;
+
+                // It diverges, or not...
+                if (a + b > 16)
+                    break;
+
+                n++;
+            }
+            pFractalIterations[(x * (int)pixel_br.x) + y] = n;
+        }
+    }
+}
 
 class MandelbrotFractal : public olc::PixelGameEngine
 {
@@ -29,62 +81,18 @@ protected:
     int nMaxIteration = 32;
     int nMode = 0;
 
-    int* pFractalIterations;
+    unsigned int* pFractalIterations;
 
 public:
 	bool OnUserCreate() override
 	{
 		nWidth = ScreenWidth();
         nHeight = ScreenHeight();
-        pFractalIterations = new int[nWidth * nHeight]{ 0 };
+        pFractalIterations = new unsigned int[nWidth * nHeight]{ 0 };
 		return true;
 	}
 
-    void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
-                       const olc::vd2d& frac_real, const olc::vd2d& frac_imag)
-    {
-        // std::cout << "====================================\n";
-        // std::cout << "Pixel Top-Left: " << pixel_tl << "\nPixel Bottom-Right: " << pixel_br << "\n";
-        // std::cout << "Frac Real: " << frac_real << "\nFrac Imaginary: " <<  frac_imag << "\n";
-
-        #pragma omp parallel for
-        for (int x = pixel_tl.x; x < pixel_br.x; x++)
-        {
-            for (int y = pixel_tl.y; y < pixel_br.y; y++)
-            {
-                double a = map(x, pixel_tl.x, pixel_br.x, frac_real.x, frac_real.y);
-                double b = map(y, pixel_tl.y, pixel_br.y, frac_imag.x, frac_imag.y);
-
-                int n = 0;
-
-                double ca = a;
-                double cb = b;
-
-                while (n < nMaxIteration)
-                {
-                    // z1 = z0^2 + c
-                    // z2 = c^2 + c
-                    //      c^2 = a^2 - b^2 + 2abi
-
-                    // C^2
-                    double aa = a*a - b*b;
-                    double bb = 2 * a * b;
-
-                    // C^2 + C
-                    a = aa + ca;
-                    b = bb + cb;
-
-                    // It diverges, or not...
-                    if (a + b > 16)
-                        break;
-
-                    n++;
-                }
-                pFractalIterations[(x * (int)pixel_br.x) + y] = n;
-            }
-        }
-    }
-
+    
 	bool OnUserUpdate(float fElapsedTime) override
 	{
 		// Panning and Zoomig, credits to @OneLoneCoder who i'am inpired for
@@ -143,7 +151,8 @@ public:
         switch (nMode)
         {
             case 0: CreateFractal(pixel_tl, pixel_br,
-                                  frac_real, frac_imag); break;
+                                  frac_real, frac_imag,
+                                  pFractalIterations, nMaxIteration); break;
         }
 
         auto tEnd = std::chrono::high_resolution_clock::now();
@@ -171,14 +180,6 @@ public:
 
 		return true;
 	}
-
-protected:
-
-    double map(double x, double oldLow, double oldHigh, double newLow, double newHigh)
-    {
-        double oldRange = (x - oldLow)/(oldHigh - oldLow);
-        return oldRange * (newHigh - newLow) + newLow;
-    }
 
 // Pan and Zoom Created by the channel @OneLoneCoder
 protected:
@@ -230,6 +231,7 @@ protected:
 
 int main(int argc, char** argv)
 {
+    MPI::Init();
     MandelbrotFractal demo;
     if (demo.Construct(900, 900, 1, 1, false, false))
         demo.Start();
