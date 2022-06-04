@@ -52,13 +52,13 @@ public:
         {
             for (int y = pixel_tl.y; y < pixel_br.y; y++)
             {
-                float a = map(x, pixel_tl.x, pixel_br.x, frac_real.x, frac_real.y);
-                float b = map(y, pixel_tl.y, pixel_br.y, frac_imag.x, frac_imag.y);
+                double a = map(x, pixel_tl.x, pixel_br.x, frac_real.x, frac_real.y);
+                double b = map(y, pixel_tl.y, pixel_br.y, frac_imag.x, frac_imag.y);
 
                 int n = 0;
 
-                float ca = a;
-                float cb = b;
+                double ca = a;
+                double cb = b;
 
                 while (n < nMaxIteration)
                 {
@@ -67,8 +67,8 @@ public:
                     //      c^2 = a^2 - b^2 + 2abi
 
                     // C^2
-                    float aa = a*a - b*b;
-                    float bb = 2 * a * b;
+                    double aa = a*a - b*b;
+                    double bb = 2 * a * b;
 
                     // C^2 + C
                     a = aa + ca;
@@ -231,7 +231,7 @@ protected:
 int main(int argc, char** argv)
 {
     MandelbrotFractal demo;
-    if (demo.Construct(400, 400, 2, 2, false, false))
+    if (demo.Construct(900, 900, 1, 1, false, false))
         demo.Start();
 
     return 0;
