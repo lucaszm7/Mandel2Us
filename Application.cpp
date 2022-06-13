@@ -19,6 +19,37 @@ double map(double x, double oldLow, double oldHigh, double newLow, double newHig
     return oldRange * (newHigh - newLow) + newLow;
 }
 
+void DivideFractal(double** pParam, 
+                   const olc::vi2d&pixel_tl, const olc::vi2d& pixel_br, 
+                   const olc::vd2d& frac_real, const olc::vd2d& frac_imag,
+                   unsigned int nMaxIteration, unsigned int nNodesSize,
+                   double exit_code = 0)
+{
+    olc::vi2d new_pixel_tl = pixel_tl;
+    olc::vi2d new_pixel_br = { pixel_br.x / nNodesSize, pixel_br.y};
+
+    olc::vd2d new_frac_real = {frac_real.x, (frac_real.y + frac_real.x) / nNodesSize};
+
+    for(int i = 0; i < nNodesSize; ++i)
+    {
+        pParam[i][0] = new_pixel_tl.x;
+        pParam[i][1] = new_pixel_tl.y;
+        pParam[i][2] = new_pixel_br.x;
+        pParam[i][3] = new_pixel_br.y;
+        pParam[i][4] = new_frac_real.x;
+        pParam[i][5] = new_frac_real.y;
+        pParam[i][6] = frac_imag.x;
+        pParam[i][7] = frac_imag.y;
+        pParam[i][8] = nMaxIteration;
+        pParam[i][9] = exit_code;
+
+        new_pixel_tl.x = new_pixel_br.x;
+        new_pixel_br.x = new_pixel_br.x + (pixel_br.x / nNodesSize);
+
+        new_frac_real = {new_frac_real.y, new_frac_real.y + ((new_frac_real.y + new_frac_real.x) / nNodesSize)};
+    }
+}
+
 void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
                        const olc::vd2d& frac_real, const olc::vd2d& frac_imag,
                        int* pFractalIterations, unsigned int nMaxIteration,
@@ -88,7 +119,9 @@ protected:
     int* pFractalIterations;
 
     // MPI Coord stuff
-    int nMyRank, nNodeSize;
+    int nMyRank, nNodesSize;
+
+    double** pNodesParam;
 
 public:
 	bool OnUserCreate() override
@@ -98,8 +131,13 @@ public:
         pFractalIterations = new int[ScreenWidth() * ScreenHeight()]{ 0 };
 
         // MPI
-         nNodeSize = MPI::COMM_WORLD.Get_size();
+        nNodesSize = MPI::COMM_WORLD.Get_size();
+        std::cout << "Nodes size: " << nNodesSize << "\n";
         nMyRank = MPI::COMM_WORLD.Get_rank();
+
+        pNodesParam = new double*[nNodesSize];
+        for(int i = 0; i < nNodesSize; ++i)
+            pNodesParam[i] = new double[10]{-1};
 
 		return true;
 	}
@@ -158,26 +196,12 @@ public:
         if (nMaxIteration < 32) nMaxIteration = 32;
 
         // Divide Fractal
-        double pParam[9];
-        pParam[0] = pixel_tl.x;
-        pParam[1] = pixel_tl.y;
-        pParam[2] = pixel_br.x / 2.0;
-        pParam[3] = pixel_br.y;
-        pParam[4] = frac_real.x;
-        pParam[5] = (frac_real.x + frac_real.y) / 2.0;
-        pParam[6] = frac_imag.x;
-        pParam[7] = frac_imag.y;
-        pParam[8] = 0;
-
-        MPI::COMM_WORLD.Send((void*)pParam, 9, MPI::DOUBLE, 1, 0);
         
-        // std::cout << "====== START MAIN =======\n";
-        // std::cout << olc::vi2d{pixel_br.x / 2.0, pixel_tl.y} << "\n";
-        // std::cout << pixel_br << "\n";
-        // std::cout << olc::vd2d{(frac_real.x + frac_real.y) / 2.0, frac_real.y} << "\n";
-        // std::cout << frac_imag << "\n";
-        // std::cout << "====== END MAIN =======\n";
+        DivideFractal(pNodesParam, pixel_tl, pixel_br, frac_real, frac_imag, nMaxIteration, nNodesSize);
 
+        for(int i = 0; i < nNodesSize - 1; i++)
+            MPI::COMM_WORLD.Send((void*)pNodesParam[i], 10, MPI::DOUBLE, i+1, 0);
+        
         // Cont the time with chrono clock
         auto tStart = std::chrono::high_resolution_clock::now();
 
@@ -191,7 +215,10 @@ public:
         auto tEnd = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> fTime = tEnd - tStart;
 
-        MPI::COMM_WORLD.Recv((void*)pFractalIterations, ((900*900)/2), MPI::UNSIGNED, 1, MPI::ANY_TAG);
+        for(int i = 0; i < nNodesSize - 1; i++)
+        {
+            MPI::COMM_WORLD.Recv((void*)pFractalIterations + ((nWidth * nHeight / nNodesSize) * i), ((ScreenWidth()*ScreenHeight())/2), MPI::INT, i + 1, MPI::ANY_TAG);
+        }
 
         // Render result to screen
 		for (int x = 0; x < ScreenWidth(); x++)
@@ -297,30 +324,23 @@ int main(int argc, char** argv)
     // Other nodes just do the computation
     else
     {
-        double pParam[9]{0};
-        unsigned int* pFractalIterations = new unsigned int[nScreenWidth * nScreenHeight];
+        double pParam[10]{0};
+        int* pFractalIterations = new int[nScreenWidth * nScreenHeight]{0};
         
-        while(pParam[8] >= 0)
+        while(pParam[9] >= 0)
         {
             // Receive
-            MPI::COMM_WORLD.Recv((void*)pParam, 9, MPI::DOUBLE, 0, MPI::ANY_TAG);
-            if(pParam[8] == -1)
+            MPI::COMM_WORLD.Recv((void*)pParam, 10, MPI::DOUBLE, 0, MPI::ANY_TAG);
+            if(pParam[9] == -1)
                 break;
             
             // Compute
             CreateFractal({pParam[0], pParam[1]}, {pParam[2], pParam[3]}, 
                           {pParam[4], pParam[5]}, {pParam[6], pParam[7]}, 
-                          pFractalIterations, 32);
+                          pFractalIterations, pParam[8], pParam[3]);
             
-            // std::cout << "====== NODE =======\n";
-            // std::cout << "For parameters: \n";
-            // for(int i = 0; i < 8; i+=2)
-            //     std::cout << "(" << pParam[i] << "," << pParam[i+1] << ")" <<  "\n";
-            // std::cout << "I create the fractal:\n";
-            // std::cout << "====== END NODE =======\n";
-
             // Send Back
-            MPI::COMM_WORLD.Send((void*)pFractalIterations, ((900*900)/2), MPI::UNSIGNED, 0, 0);
+            MPI::COMM_WORLD.Send((void*)(pFractalIterations + ((int)pParam[0] * (int)pParam[3])), ((nScreenHeight*nScreenWidth)/nNodesSize), MPI::INT, 0, 0);
         }
         std::cout << "I node " << nMyRank << " have finish!\n";
     }
