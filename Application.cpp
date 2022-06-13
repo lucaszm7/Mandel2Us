@@ -28,8 +28,8 @@ void DivideFractal(double** pParam,
     olc::vi2d new_pixel_tl = pixel_tl;
     olc::vi2d new_pixel_br = { pixel_br.x / nNodesSize, pixel_br.y};
 
-    olc::vd2d new_frac_real = {frac_real.x, (frac_real.y + frac_real.x) / nNodesSize};
-    double frac_real_part = frac_real.x - (frac_real.y + frac_real.x) / nNodesSize;
+    double frac_real_part = (std::abs(frac_real.y) + std::abs(frac_real.x)) / nNodesSize;
+    olc::vd2d new_frac_real = {frac_real.x, frac_real.x + frac_real_part};
 
     for(int i = 0; i < nNodesSize; ++i)
     {
@@ -44,15 +44,16 @@ void DivideFractal(double** pParam,
         pParam[i][8] = nMaxIteration;
         pParam[i][9] = exit_code;
 
-        std::cout << "=== DIVIDE FRACTAL ===\n";
-        for(int j = 0; j < 8; j+=2)
-            std::cout << "(" << pParam[i][j] << "," << pParam[i][j+1] << ")\n";
-        std::cout << "=== END DIVIDE ===\n\n";
+        // std::cout << "=== DIVIDE FRACTAL ===\n";
+        // for(int j = 0; j < 8; j+=2)
+        //     std::cout << "(" << pParam[i][j] << "," << pParam[i][j+1] << ")\n";
+        // std::cout << "Frac real part: " << frac_real_part << "\n";
+        // std::cout << "=== END DIVIDE ===\n\n";
 
         new_pixel_tl.x = new_pixel_br.x;
         new_pixel_br.x = new_pixel_br.x + (pixel_br.x / nNodesSize);
         
-        new_frac_real = {new_frac_real.y, frac_real.y + i * frac_real_part};
+        new_frac_real = {new_frac_real.y, new_frac_real.y + frac_real_part};
     }
 }
 
@@ -232,7 +233,7 @@ public:
 
         for(int i = 0; i < nNodesSize - 1; i++)
         {
-            MPI::COMM_WORLD.Recv((void*)pFractalIterations + ((nWidth * nHeight / nNodesSize) * i), ((ScreenWidth()*ScreenHeight())/2), MPI::INT, i + 1, MPI::ANY_TAG);
+            MPI::COMM_WORLD.Recv((void*)(pFractalIterations + ((int)pNodesParam[i][0] * (int)pNodesParam[i][3])), ((ScreenWidth()*ScreenHeight()) / nNodesSize), MPI::INT, i + 1, MPI::ANY_TAG);
         }
 
         // Render result to screen
@@ -355,12 +356,10 @@ int main(int argc, char** argv)
             if(pParam[9] == -1)
                 break;
             
-            std::cout << "====== NODE =======\n";
-            std::cout << "For parameters: \n";
-            for(int i = 0; i < 8; i+=2)
-                std::cout << "(" << pParam[i] << "," << pParam[i+1] << ")" <<  "\n";
-            std::cout << "I create the fractal:\n";
-            std::cout << "====== END NODE =======\n";
+            // std::cout << "====== NODE: " << nMyRank << " =======\n";
+            // for(int i = 0; i < 8; i+=2)
+            //     std::cout << i << " from " << nMyRank << " - " << "(" << pParam[i] << "," << pParam[i+1] << ")" <<  "\n";
+            // std::cout << "====== END NODE =======\n";
 
             // Compute
             CreateFractal({pParam[0], pParam[1]}, {pParam[2], pParam[3]}, 
