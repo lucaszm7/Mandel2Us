@@ -207,8 +207,17 @@ public:
 
         switch (nMode)
         {
-            case 0: CreateFractal({pixel_br.x / 2.0, pixel_tl.y}, pixel_br,
-                                  {(frac_real.x + frac_real.y) / 2.0, frac_real.y}, frac_imag,
+            // case 0: 
+            //         CreateFractal({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
+            //                       {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
+            //                       {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
+            //                       {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
+            //                        pFractalIterations, pNodesParam[nNodesSize-1][8]); break;
+            
+            case 0: CreateFractal({pixel_br.x / 2, pixel_tl.y}, 
+                                  pixel_br,
+                                  {(frac_real.x + frac_real.y) / 2, frac_real.y},
+                                  frac_imag,
                                   pFractalIterations, nMaxIteration); break;
         }
 
@@ -294,8 +303,8 @@ protected:
 int main(int argc, char** argv)
 {
 
-    int nScreenWidth = 900;
-    int nScreenHeight = 900;
+    int nScreenWidth  = 300;
+    int nScreenHeight = 300;
 
     MPI::Init(argc, argv);
 
@@ -340,6 +349,13 @@ int main(int argc, char** argv)
             if(pParam[9] == -1)
                 break;
             
+            std::cout << "====== NODE =======\n";
+            std::cout << "For parameters: \n";
+            for(int i = 0; i < 8; i+=2)
+                std::cout << "(" << pParam[i] << "," << pParam[i+1] << ")" <<  "\n";
+            std::cout << "I create the fractal:\n";
+            std::cout << "====== END NODE =======\n";
+
             // Compute
             CreateFractal({pParam[0], pParam[1]}, {pParam[2], pParam[3]}, 
                           {pParam[4], pParam[5]}, {pParam[6], pParam[7]}, 
