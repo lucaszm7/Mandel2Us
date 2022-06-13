@@ -29,6 +29,7 @@ void DivideFractal(double** pParam,
     olc::vi2d new_pixel_br = { pixel_br.x / nNodesSize, pixel_br.y};
 
     olc::vd2d new_frac_real = {frac_real.x, (frac_real.y + frac_real.x) / nNodesSize};
+    double frac_real_part = frac_real.x - (frac_real.y + frac_real.x) / nNodesSize;
 
     for(int i = 0; i < nNodesSize; ++i)
     {
@@ -43,10 +44,15 @@ void DivideFractal(double** pParam,
         pParam[i][8] = nMaxIteration;
         pParam[i][9] = exit_code;
 
+        std::cout << "=== DIVIDE FRACTAL ===\n";
+        for(int j = 0; j < 8; j+=2)
+            std::cout << "(" << pParam[i][j] << "," << pParam[i][j+1] << ")\n";
+        std::cout << "=== END DIVIDE ===\n\n";
+
         new_pixel_tl.x = new_pixel_br.x;
         new_pixel_br.x = new_pixel_br.x + (pixel_br.x / nNodesSize);
-
-        new_frac_real = {new_frac_real.y, new_frac_real.y + ((new_frac_real.y + new_frac_real.x) / nNodesSize)};
+        
+        new_frac_real = {new_frac_real.y, frac_real.y + i * frac_real_part};
     }
 }
 
@@ -207,18 +213,18 @@ public:
 
         switch (nMode)
         {
-            // case 0: 
-            //         CreateFractal({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
-            //                       {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
-            //                       {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
-            //                       {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
-            //                        pFractalIterations, pNodesParam[nNodesSize-1][8]); break;
+            case 0: 
+                    CreateFractal({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
+                                  {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
+                                  {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
+                                  {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
+                                   pFractalIterations, pNodesParam[nNodesSize-1][8]); break;
             
-            case 0: CreateFractal({pixel_br.x / 2, pixel_tl.y}, 
-                                  pixel_br,
-                                  {(frac_real.x + frac_real.y) / 2, frac_real.y},
-                                  frac_imag,
-                                  pFractalIterations, nMaxIteration); break;
+            // case 0: CreateFractal({pixel_br.x / 2, pixel_tl.y}, 
+            //                       pixel_br,
+            //                       {(frac_real.x + frac_real.y) / 2, frac_real.y},
+            //                       frac_imag,
+            //                       pFractalIterations, nMaxIteration); break;
         }
 
         auto tEnd = std::chrono::high_resolution_clock::now();
