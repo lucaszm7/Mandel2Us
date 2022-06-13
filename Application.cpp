@@ -21,7 +21,8 @@ double map(double x, double oldLow, double oldHigh, double newLow, double newHig
 
 void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
                        const olc::vd2d& frac_real, const olc::vd2d& frac_imag,
-                       unsigned int* pFractalIterations, unsigned int nMaxIteration)
+                       int* pFractalIterations, unsigned int nMaxIteration,
+                       int nScreenHeightSize = 0)
 {
     // std::cout << "====================================\n";
     // std::cout << "Pixel Top-Left: " << pixel_tl << "\nPixel Bottom-Right: " << pixel_br << "\n";
@@ -84,7 +85,7 @@ protected:
     int nMaxIteration = 32;
     int nMode = 0;
 
-    unsigned int* pFractalIterations;
+    int* pFractalIterations;
 
     // MPI Coord stuff
     int nMyRank, nNodeSize;
@@ -94,7 +95,7 @@ public:
 	{
 		nWidth = ScreenWidth();
         nHeight = ScreenHeight();
-        pFractalIterations = new unsigned int[ScreenWidth() * ScreenHeight()]{ 0 };
+        pFractalIterations = new int[ScreenWidth() * ScreenHeight()]{ 0 };
 
         // MPI
          nNodeSize = MPI::COMM_WORLD.Get_size();
@@ -271,11 +272,11 @@ int main(int argc, char** argv)
 
     MPI::Init(argc, argv);
 
-    int nMyRank, nNodeSize;
+    int nMyRank, nNodesSize;
     char sComputerName[MPI::MAX_PROCESSOR_NAME];
     int nComputerName;
 
-    nNodeSize = MPI::COMM_WORLD.Get_size();
+    nNodesSize = MPI::COMM_WORLD.Get_size();
     nMyRank = MPI::COMM_WORLD.Get_rank();
 
     MPI::Get_processor_name(sComputerName, nComputerName);
@@ -284,7 +285,7 @@ int main(int argc, char** argv)
     if(nMyRank == 0)
     {
         MandelbrotFractal demo;
-        if (demo.Construct(nScreenWidth, nScreenHeight, 1, 1, false, false))
+        if (demo.Construct(nScreenWidth, nScreenHeight, 2, 2, false, false))
             demo.Start();
         
         double pFinishCode[9]{0};
@@ -326,8 +327,8 @@ int main(int argc, char** argv)
 
     std::cout << "I node " << nMyRank << " am waiting for other nodes to finish...\n";
     MPI::COMM_WORLD.Barrier();
-    std::cout << "All nodes has finish!\n";
     MPI::Finalize();
+    std::cout << "All nodes has finish!\n";
 
     return 0;
 }
