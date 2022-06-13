@@ -70,7 +70,7 @@ class MandelbrotFractal : public olc::PixelGameEngine
 public:
 	MandelbrotFractal()
 	{
-		sAppName = "Example";
+		sAppName = "Mandelbrot Fractal!!";
 	}
 
 protected:
@@ -212,7 +212,7 @@ public:
 		return true;
 	}
 
-// Pan and Zoom Created by the channel @OneLoneCoder
+// Pan and Zoom Created following tutorials on channel @OneLoneCoder
 protected:
     // Pan & Zoom variables
 	olc::vd2d vOffset = { 0.0, 0.0 };
