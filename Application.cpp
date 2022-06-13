@@ -315,9 +315,15 @@ int main(int argc, char** argv)
         if (demo.Construct(nScreenWidth, nScreenHeight, 2, 2, false, false))
             demo.Start();
         
-        double pFinishCode[9]{0};
-        pFinishCode[8] = -1;
-        MPI::COMM_WORLD.Send((void*)pFinishCode, 9, MPI::DOUBLE, 1, 0);
+        double** pFinishCode;
+        pFinishCode = new double*[nNodesSize];
+        for(int i = 0; i < nNodesSize - 1; ++i)
+        {
+            pFinishCode[i] = new double[10] { -1.0 };
+            pFinishCode[i][9] = -1.0;
+            MPI::COMM_WORLD.Send((void*)pFinishCode[i], 10, MPI::DOUBLE, i+1, 0);
+        }
+
         std::cout << "I node " << nMyRank << " have finish!\n";
     }
 
