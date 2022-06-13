@@ -27,6 +27,9 @@ void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
     // std::cout << "Pixel Top-Left: " << pixel_tl << "\nPixel Bottom-Right: " << pixel_br << "\n";
     // std::cout << "Frac Real: " << frac_real << "\nFrac Imaginary: " <<  frac_imag << "\n";
 
+    if (nScreenHeightSize == 0)
+        nScreenHeightSize = pixel_br.x;
+
     #pragma omp parallel for
     for (int x = pixel_tl.x; x < pixel_br.x; x++)
     {
@@ -60,7 +63,7 @@ void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
 
                 n++;
             }
-            pFractalIterations[(x * (int)pixel_br.x) + y] = n;
+            pFractalIterations[(x * nScreenHeightSize) + y] = n;
         }
     }
 }
