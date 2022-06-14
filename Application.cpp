@@ -197,6 +197,9 @@ public:
         // Select Mode
         if (GetKey(olc::Key::K0).bPressed) nMode = 0;
         if (GetKey(olc::Key::K1).bPressed) nMode = 1;
+        if (GetKey(olc::Key::K2).bPressed) nMode = 2;
+        if (GetKey(olc::Key::K3).bPressed) nMode = 3;
+        if (GetKey(olc::Key::K4).bPressed) nMode = 4;
         // Modify the max iteration on the fly
         if (GetKey(olc::UP).bPressed) nMaxIteration += 32;
 		if (GetKey(olc::DOWN).bPressed) nMaxIteration -= 32;
@@ -211,30 +214,20 @@ public:
         // Cont the time with chrono clock
         auto tStart = std::chrono::high_resolution_clock::now();
 
-        // std::cout << "=== DIVIDE MAIN ===\n";
-        // std::cout << olc::vi2d{pixel_br.x / 2, pixel_tl.y} << "\n";
-        // std::cout << pixel_br << "\n";
-        // std::cout << olc::vd2d{(frac_real.x + frac_real.y) / 2, frac_real.y} << "\n";
-        // std::cout << frac_imag << "\n";
-        // std::cout << "=== END MAIN ===\n\n";
-        // std::cout << "======= FRAC REAL ========\n" << frac_real << "\n";
-
-        switch (nMode)
-        {
-            case 0: 
+        CreateFractal({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
                     CreateFractal({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
+        CreateFractal({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
+                      {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
                                   {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
+                      {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
+                      {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
                                   {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
+                      {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
+                      {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
                                   {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
-                                   pFractalIterations, pNodesParam[nNodesSize-1][8]); break;
-            
-            // case 0: CreateFractal({pixel_br.x / 2, pixel_tl.y}, 
-            //                       pixel_br,
-            //                       {(frac_real.x + frac_real.y) / 2, frac_real.y},
-            //                       frac_imag,
-            //                       pFractalIterations, nMaxIteration); break;
-        }
-
+                      {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
+                      pFractalIterations, pNodesParam[nNodesSize-1][8]);
+        
         auto tEnd = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> fTime = tEnd - tStart;
 
@@ -243,25 +236,52 @@ public:
             MPI::COMM_WORLD.Recv((void*)(pFractalIterations + ((int)pNodesParam[i][0] * (int)pNodesParam[i][3])), ((ScreenWidth()*ScreenHeight()) / nNodesSize), MPI::INT, i + 1, MPI::ANY_TAG);
         }
 
-        // Render result to screen
-		for (int x = 0; x < ScreenWidth(); x++)
-		{
-			for (int y = 0; y < ScreenHeight(); y++)
-			{
-				int n = pFractalIterations[x * ScreenWidth() + y];
-				// Coloring Algorithm - Picked from https://solarianprogrammer.com/2013/02/28/mandelbrot-set-cpp-11/
-                double t = (double)n/(double)nMaxIteration;
-            	// Use smooth polynomials for r, g, b
-            	int rr = (int)(9*(1-t)*t*t*t*255);
-            	int rg = (int)(15*(1-t)*(1-t)*t*t*255);
-            	int rb =  (int)(8.5*(1-t)*(1-t)*(1-t)*t*255);
+        switch (nMode)
+        {
+            case 0: 
+                // Render result to screen
+                for (int x = 0; x < ScreenWidth(); x++)
+                {
+                    for (int y = 0; y < ScreenHeight(); y++)
+                    {
+                        int n = pFractalIterations[x * ScreenWidth() + y];
+                        // Coloring Algorithm - Picked from https://solarianprogrammer.com/2013/02/28/mandelbrot-set-cpp-11/
+                        double t = (double)n/(double)nMaxIteration;
+                        // Use smooth polynomials for r, g, b
+                        int rr = (int)(9*(1-t)*t*t*t*255);
+                        int rg = (int)(15*(1-t)*(1-t)*t*t*255);
+                        int rb =  (int)(8.5*(1-t)*(1-t)*(1-t)*t*255);
+                        Draw(x, y, olc::Pixel(rr, rg, rb, 255));	
+                    }
+                } break;
 
-                Draw(x, y, olc::Pixel(rr, rg, rb, 255));	
+            case 1:
+                for (int x = 0; x < ScreenWidth(); x++)
+                {
+                    for (int y = 0; y < ScreenHeight(); y++)
+                    {
+                        int n = pFractalIterations[x * ScreenWidth() + y];
+                        int bright = 125;
+                        if (n == nMaxIteration) bright = 0;
+                        Draw(x, y, olc::Pixel(bright, bright, bright, 255));
+                    } 
+                } break;
+            case 2:
+                for (int x = 0; x < ScreenWidth(); x++)
+                {
+                    for (int y = 0; y < ScreenHeight(); y++)
+                    {
+                        int n = pFractalIterations[x * ScreenWidth() + y];
+                        Draw(x, y, olc::Pixel(n*n, n, n*3, 255));
+                    } 
             }
-		}
+                    } 
+                } break;
+        }
 
         DrawString(0, 30, "Time Taken: " + std::to_string(fTime.count()) + "s", olc::WHITE, 3);
 		DrawString(0, 60, "Iterations: " + std::to_string(nMaxIteration), olc::WHITE, 3);
+		DrawString(0, 90, "Draw Mode: " + std::to_string(nMode) + "/ 3", olc::WHITE, 3);
 
 		return true;
 	}
