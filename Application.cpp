@@ -310,8 +310,8 @@ protected:
 int main(int argc, char** argv)
 {
 
-    int nScreenWidth  = 500;
-    int nScreenHeight = 500;
+    int nScreenWidth  = 600;
+    int nScreenHeight = 600;
 
     MPI::Init(argc, argv);
 
