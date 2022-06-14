@@ -28,7 +28,7 @@ void DivideFractal(double** pParam,
     olc::vi2d new_pixel_tl = pixel_tl;
     olc::vi2d new_pixel_br = { pixel_br.x / nNodesSize, pixel_br.y};
 
-    double frac_real_part = (std::abs(frac_real.y) + std::abs(frac_real.x)) / nNodesSize;
+    double frac_real_part = std::abs(frac_real.y - frac_real.x) / nNodesSize;
     olc::vd2d new_frac_real = {frac_real.x, frac_real.x + frac_real_part};
 
     for(int i = 0; i < nNodesSize; ++i)
@@ -203,7 +203,6 @@ public:
         if (nMaxIteration < 32) nMaxIteration = 32;
 
         // Divide Fractal
-        
         DivideFractal(pNodesParam, pixel_tl, pixel_br, frac_real, frac_imag, nMaxIteration, nNodesSize);
 
         for(int i = 0; i < nNodesSize - 1; i++)
@@ -211,6 +210,14 @@ public:
         
         // Cont the time with chrono clock
         auto tStart = std::chrono::high_resolution_clock::now();
+
+        // std::cout << "=== DIVIDE MAIN ===\n";
+        // std::cout << olc::vi2d{pixel_br.x / 2, pixel_tl.y} << "\n";
+        // std::cout << pixel_br << "\n";
+        // std::cout << olc::vd2d{(frac_real.x + frac_real.y) / 2, frac_real.y} << "\n";
+        // std::cout << frac_imag << "\n";
+        // std::cout << "=== END MAIN ===\n\n";
+        // std::cout << "======= FRAC REAL ========\n" << frac_real << "\n";
 
         switch (nMode)
         {
@@ -277,32 +284,16 @@ protected:
                            const olc::vd2d& world_tl_before, const olc::vd2d& world_br_before, 
                            olc::vd2d& world_real_after, olc::vd2d& world_imag_after)
     {
-        // v.x = ((double)(n.x) / vScale.x) + vOffset.x;
-        // v.y = ((double)(n.y) / vScale.y) + vOffset.y;
-
-        // std::cout << "OFFSET: " << vOffset << "\nSCALE: " << vScale << "\n";
-
         olc::vd2d screen_tl_after;
         ScreenToWorld(screen_tl_before, screen_tl_after);
         olc::vd2d screen_br_after;
         ScreenToWorld(screen_br_before, screen_br_after);
-        
-        // std::cout << "+++++++++++++++++++++++++++++++++++++++++" << "\n";
-        // std::cout << "Screen TL Before: " << screen_tl_before << "\n";
-        // std::cout << "Screen BR Before: " << screen_br_before << "\n";
-        // std::cout << "World TL Before: " << world_tl_before << "\n";
-        // std::cout << "World BR Before: " << world_br_before << "\n";
-        // std::cout << "Screen TL After: " << screen_tl_after << "\n";
-        // std::cout << "Screen BR After: " << screen_br_after << "\n";
         
         world_real_after.x = map(screen_tl_after.x, (double)screen_tl_before.x, (double)screen_br_before.x, world_tl_before.x, world_br_before.x);
         world_real_after.y = map(screen_br_after.x, (double)screen_tl_before.x, (double)screen_br_before.x, world_tl_before.x, world_br_before.x);
 
         world_imag_after.x = map(screen_tl_after.y, (double)screen_tl_before.y, (double)screen_br_before.y, world_tl_before.y, world_br_before.y);
         world_imag_after.y = map(screen_br_after.y, (double)screen_tl_before.y, (double)screen_br_before.y, world_tl_before.y, world_br_before.y);
-
-        // std::cout << "World Real After: " << world_real_after << "\n";
-        // std::cout << "World Imag After: " << world_imag_after << "\n";
 
     }
 };
