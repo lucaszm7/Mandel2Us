@@ -1,6 +1,6 @@
 CXX = mpic++
 CXXFLAGS = -fopenmp
-LFLAGS = -lX11 -lGL -lpthread -lpng -lstdc++fs -std=c++17
+LFLAGS = -lX11 -lGL -lpthread -lpng -lstdc++fs -std=c++17 -O2
 FILE = Application
 
 all: Application.cpp
