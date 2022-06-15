@@ -59,8 +59,10 @@ void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
 
     if (nScreenHeightSize == 0)
         nScreenHeightSize = pixel_br.x;
-        
-    #pragma omp parallel for num_threads(omp_get_num_procs())
+    
+    auto CHUNK = (pixel_br.x - pixel_tl.x) / 16;
+
+    #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) 
     for (int x = pixel_tl.x; x < pixel_br.x; x++)
     {
         for (int y = pixel_tl.y; y < pixel_br.y; y++)
