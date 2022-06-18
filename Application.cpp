@@ -187,12 +187,12 @@ public:
 
         ScreenToFrac(pixel_tl, pixel_br, frac_tl, frac_br, frac_real, frac_imag);
 
-        // Select Mode
-        if (GetKey(olc::Key::K0).bPressed) nMode = 0;
-        if (GetKey(olc::Key::K1).bPressed) nMode = 1;
-        if (GetKey(olc::Key::K2).bPressed) nMode = 2;
-        if (GetKey(olc::Key::K3).bPressed) nMode = 3;
-        if (GetKey(olc::Key::K4).bPressed) nMode = 4;
+        // Color Option
+        if (GetKey(olc::Key::F1).bPressed) nColorMode = 0;
+        if (GetKey(olc::Key::F2).bPressed) nColorMode = 1;
+        if (GetKey(olc::Key::F3).bPressed) nColorMode = 2;
+        if (GetKey(olc::Key::F4).bPressed) nColorMode = 3;
+        if (GetKey(olc::Key::F5).bPressed) nColorMode = 4;
         // Modify the max iteration on the fly
         if (GetKey(olc::UP).bPressed) nMaxIteration += 32;
 		if (GetKey(olc::DOWN).bPressed) nMaxIteration -= 32;
@@ -221,7 +221,7 @@ public:
             MPI::COMM_WORLD.Recv((void*)(pFractalIterations + ((int)pNodesParam[i][0] * (int)pNodesParam[i][3])), ((ScreenWidth()*ScreenHeight()) / nNodesSize), MPI::INT, i + 1, MPI::ANY_TAG);
         }
 
-        switch (nMode)
+        switch (nColorMode)
         {
             case 0: 
                 // Render result to screen
@@ -245,11 +245,12 @@ public:
                 {
                     for (int y = 0; y < ScreenHeight(); y++)
                     {
-                        int n = pFractalIterations[x * ScreenWidth() + y];
-                        int bright = 125;
-                        if (n == nMaxIteration) bright = 0;
-                        Draw(x, y, olc::Pixel(bright, bright, bright, 255));
-                    } 
+                        int i = pFractalIterations[x * ScreenWidth() + y];
+                        float n = (float)i;
+                        float a = 0.1f;
+                        // Thank you @Eriksonn - Wonderful Magic Fractal Oddball Man
+                        Draw(x, y, olc::PixelF(0.5f * sin(a * n) + 0.5f, 0.5f * sin(a * n + 2.094f) + 0.5f,  0.5f * sin(a * n + 4.188f) + 0.5f));
+                    }
                 } break;
             case 2:
                 for (int x = 0; x < ScreenWidth(); x++)
@@ -264,7 +265,7 @@ public:
 
         DrawString(0, 30, "Time Taken: " + std::to_string(fTime.count()) + "s", olc::WHITE, 3);
 		DrawString(0, 60, "Iterations: " + std::to_string(nMaxIteration), olc::WHITE, 3);
-		DrawString(0, 90, "Draw Mode: " + std::to_string(nMode) + "/ 3", olc::WHITE, 3);
+		DrawString(0, 120, "Draw Mode: F" + std::to_string(nColorMode + 1) + "/ F3", olc::WHITE, 3);
 
 		return true;
 	}
