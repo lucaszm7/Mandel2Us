@@ -1,7 +1,7 @@
 // Standart Stuff
 #include <iostream>
 #include <chrono>
-#include <complex>
+#include <immintrin.h>
 
 // Parallelization Stuff
 #include <omp.h>
@@ -56,7 +56,7 @@ void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
                        int* pFractalIterations, unsigned int nMaxIteration,
                        int nScreenHeightSize = 0)
 {
-
+    
     if (nScreenHeightSize == 0)
         nScreenHeightSize = pixel_br.x;
     
@@ -90,7 +90,56 @@ void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
                 b = bb + cb;
 
                 // It diverges, or not...
-                if (a + b > 16)
+                if (a + b > 4)
+                    break;
+
+                n++;
+            }
+            pFractalIterations[(x * nScreenHeightSize) + y] = n;
+        }
+    }
+}
+
+void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
+                       const olc::vd2d& frac_real, const olc::vd2d& frac_imag,
+                       int* pFractalIterations, unsigned int nMaxIteration,
+                       int nScreenHeightSize = 0)
+{
+    
+    if (nScreenHeightSize == 0)
+        nScreenHeightSize = pixel_br.x;
+    
+    auto CHUNK = (pixel_br.x - pixel_tl.x) / 32;
+
+    #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) 
+    for (int x = pixel_tl.x; x < pixel_br.x; x++)
+    {
+        for (int y = pixel_tl.y; y < pixel_br.y; y++)
+        {
+            double a = map(x, pixel_tl.x, pixel_br.x, frac_real.x, frac_real.y);
+            double b = map(y, pixel_tl.y, pixel_br.y, frac_imag.x, frac_imag.y);
+
+            int n = 0;
+
+            double ca = a;
+            double cb = b;
+
+            while (n < nMaxIteration)
+            {
+                // z1 = z0^2 + c
+                // z2 = c^2 + c
+                //      c^2 = a^2 - b^2 + 2abi
+
+                // C^2
+                double aa = a*a - b*b;
+                double bb = 2 * a * b;
+
+                // C^2 + C
+                a = aa + ca;
+                b = bb + cb;
+
+                // It diverges, or not...
+                if (a + b > 4)
                     break;
 
                 n++;
@@ -332,8 +381,8 @@ protected:
 int main(int argc, char** argv)
 {
 
-    int nScreenWidth  = 600;
-    int nScreenHeight = 600;
+    int nScreenWidth  = 800;
+    int nScreenHeight = 800;
 
     MPI::Init(argc, argv);
 
