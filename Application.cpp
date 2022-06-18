@@ -114,7 +114,8 @@ protected:
     int nHeight;
 
     int nMaxIteration = 32;
-    int nMode = 0;
+    int nColorMode = 0;
+    int nFracMode = 0;
 
     int* pFractalIterations;
 
@@ -187,6 +188,12 @@ public:
 
         ScreenToFrac(pixel_tl, pixel_br, frac_tl, frac_br, frac_real, frac_imag);
 
+        // Calculation Option
+        if (GetKey(olc::Key::K1).bPressed) nFracMode = 0;
+        if (GetKey(olc::Key::K2).bPressed) nFracMode = 1;
+        if (GetKey(olc::Key::K3).bPressed) nFracMode = 2;
+        if (GetKey(olc::Key::K4).bPressed) nFracMode = 3;
+        if (GetKey(olc::Key::K5).bPressed) nFracMode = 4;
         // Color Option
         if (GetKey(olc::Key::F1).bPressed) nColorMode = 0;
         if (GetKey(olc::Key::F2).bPressed) nColorMode = 1;
@@ -207,12 +214,23 @@ public:
         // Cont the time with chrono clock
         auto tStart = std::chrono::high_resolution_clock::now();
 
-        CreateFractal({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
-                      {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
-                      {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
-                      {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
-                      pFractalIterations, pNodesParam[nNodesSize-1][8]);
-        
+        switch (nFracMode)
+        {
+            case 0:
+                CreateFractal({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
+                            {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
+                            {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
+                            {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
+                            pFractalIterations, pNodesParam[nNodesSize-1][8]);
+            case 1:
+                CreateFractalAVX({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
+                            {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
+                            {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
+                            {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
+                            pFractalIterations, pNodesParam[nNodesSize-1][8]);
+
+        }
+
         auto tEnd = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> fTime = tEnd - tStart;
 
@@ -265,6 +283,7 @@ public:
 
         DrawString(0, 30, "Time Taken: " + std::to_string(fTime.count()) + "s", olc::WHITE, 3);
 		DrawString(0, 60, "Iterations: " + std::to_string(nMaxIteration), olc::WHITE, 3);
+		DrawString(0, 90, "Calc Mode: " + std::to_string(nFracMode + 1) + "/ 2", olc::WHITE, 3);
 		DrawString(0, 120, "Draw Mode: F" + std::to_string(nColorMode + 1) + "/ F3", olc::WHITE, 3);
 
 		return true;
