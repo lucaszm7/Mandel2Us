@@ -77,7 +77,7 @@ void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
             double ca = a;
             double cb = b;
 
-            while (n < nMaxIteration)
+            while (n < nMaxIteration && a < 4 )
             {
                 // z1 = z0^2 + c
                 // z2 = c^2 + c
@@ -90,10 +90,6 @@ void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
                 // C^2 + C
                 a = aa + ca;
                 b = bb + cb;
-
-                // It diverges, or not...
-                if (a + b > 4)
-                    break;
 
                 n++;
             }
@@ -111,17 +107,60 @@ void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
     if (nScreenHeightSize == 0)
         nScreenHeightSize = pixel_br.x;
     
-    // auto CHUNK = (pixel_br.x - pixel_tl.x) / 64;
+    // 64-bit "double" registers
+    __m256d _aa, _bb, _ca, _cb, _a, _b, _zr2, _zi2, _two;
+
+    // | 2.0 | 2.0 | 2.0 | 2.0 | 
+    _two = _mm256_set1_pd(2.0);
+
+    for (int x = pixel_tl.x; x < pixel_br.x; x++)
+    {
+        for (int y = pixel_tl.y; y < pixel_br.y; y += 4)
+        {
+            // double ca = a;
+            // double cb = b;
+
+            // double aa = a*a - b*b;
+            // double bb = 2 * a * b;
+
+            // a = aa + ca;
+            // b = bb + cb;
+
+            // Multiply 256-bit registers in parallel, as they are doubles
+
+            // a * a
+            _zr2 = _mm256_mul_pd(_a, _a); // a * a
+
+            // b * b
+            _zi2 = _mm256_mul_pd(_b, _b); // b * b
+
+            // a*a - b*b
+            _aa = _mm256_sub_pd(_zr2, _zi2); // (a * a) - (b * a)
+
+            // a * b
+            _bb = _mm256_mul_pd(_a, _b); // a * b
+
+            // (bb * 2) + cb
+            _b = _mm256_fmadd_pd(_bb, _two, _cb); // ((a * b) * 2) + cb
+
+            // aa + ca
+            _a = _mm256_add_pd(_aa, _ca); // ((a * a) - (b * b)) + ca
+        }
+    }
+
+
     auto CHUNK = (pixel_br.x - pixel_tl.x) / 64;
 
     #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) 
     for (int x = pixel_tl.x; x < pixel_br.x; x++)
     {
-        for (int y = pixel_tl.y; y < pixel_br.y; y++)
+        for (int y = pixel_tl.y; y < pixel_br.y; y += 4)
         {
             // Z(n+1) = Z(n)^2 + C(a(x) + b(y)i)
             double a = map(x, pixel_tl.x, pixel_br.x, frac_real.x, frac_real.y);
             double b = map(y, pixel_tl.y, pixel_br.y, frac_imag.x, frac_imag.y);
+
+
 
             int n = 0;
 
