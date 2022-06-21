@@ -70,18 +70,13 @@ void DivideFractal(double** pParam,
     }
 }
 
-void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
+void CreateFractalSequential(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
                        const olc::vd2d& frac_real, const olc::vd2d& frac_imag,
                        int* pFractalIterations, unsigned int nMaxIteration,
                        int nScreenHeightSize = 0)
 {
     
-    if (nScreenHeightSize == 0)
-        nScreenHeightSize = pixel_br.x;
-    
-    auto CHUNK = (pixel_br.x - pixel_tl.x) / 128;
-
-    #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) 
+    nScreenHeightSize = pixel_br.x;
     for (int x = pixel_tl.x; x < pixel_br.x; x++)
     {
         for (int y = pixel_tl.y; y < pixel_br.y; y++)
@@ -94,7 +89,7 @@ void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
             double ca = a;
             double cb = b;
 
-            while (n < nMaxIteration && a < 4 )
+            while (n < nMaxIteration && (a*a + b*b) < 4 )
             {
                 // z1 = z0^2 + c
                 // z2 = c^2 + c
@@ -115,7 +110,50 @@ void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
     }
 }
 
-void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
+void CreateFractalParallel(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
+                       const olc::vd2d& frac_real, const olc::vd2d& frac_imag,
+                       int* pFractalIterations, unsigned int nMaxIteration,
+                       int nScreenHeightSize = 0)
+{
+    
+    nScreenHeightSize = pixel_br.x;
+
+    auto CHUNK = (pixel_br.x - pixel_tl.x) / 128;
+    #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) 
+    for (int x = pixel_tl.x; x < pixel_br.x; x++)
+    {
+        for (int y = pixel_tl.y; y < pixel_br.y; y++)
+        {
+            double a = map(x, pixel_tl.x, pixel_br.x, frac_real.x, frac_real.y);
+            double b = map(y, pixel_tl.y, pixel_br.y, frac_imag.x, frac_imag.y);
+
+            int n = 0;
+
+            double ca = a;
+            double cb = b;
+
+            while (n < nMaxIteration && (a*a + b*b) < 4 )
+            {
+                // z1 = z0^2 + c
+                // z2 = c^2 + c
+                //      c^2 = a^2 - b^2 + 2abi
+
+                // C^2
+                double aa = a*a - b*b;
+                double bb = 2 * a * b;
+
+                // C^2 + C
+                a = aa + ca;
+                b = bb + cb;
+
+                n++;
+            }
+            pFractalIterations[(x * nScreenHeightSize) + y] = n;
+        }
+    }
+}
+
+void CreateFractalParallelAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
                        const olc::vd2d& frac_real, const olc::vd2d& frac_imag,
                        int* pFractalIterations, int nMaxIteration,
                        int nScreenHeightSize = 0)
@@ -265,9 +303,9 @@ protected:
     int nWidth;
     int nHeight;
 
-    int nMaxIteration = 32;
-    int nColorMode = 0;
-    int nFracMode = 1;
+    int nMaxIteration = 256;
+    int nColorMode = 2;
+    int nFracMode = 2;
 
     int* pFractalIterations;
 
@@ -377,13 +415,19 @@ public:
         switch (nFracMode)
         {
             case 0:
-                CreateFractal({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
+                CreateFractalSequential({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
                             {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
                             {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
                             {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
                             pFractalIterations, pNodesParam[nNodesSize-1][8]); break;
             case 1:
-                CreateFractalAVX({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
+                CreateFractalParallel({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
+                            {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
+                            {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
+                            {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
+                            pFractalIterations, pNodesParam[nNodesSize-1][8]); break;
+            case 2:
+                CreateFractalParallelAVX({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
                             {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
                             {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
                             {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
@@ -441,10 +485,29 @@ public:
                 } break;
         }
 
-        DrawString(0, 30, "Time Taken: " + std::to_string(fTime.count()) + "s", olc::WHITE, 3);
-		DrawString(0, 60, "Iterations: " + std::to_string(nMaxIteration), olc::WHITE, 3);
-		DrawString(0, 90, "Calc Mode: " + std::to_string(nFracMode + 1) + "/ 2", olc::WHITE, 3);
-		DrawString(0, 120, "Draw Mode: F" + std::to_string(nColorMode + 1) + "/ F3", olc::WHITE, 3);
+        std::string calcName;
+        olc::Pixel color;
+        if(nFracMode == 0)
+        {
+            calcName = "Just MPI";
+            color = olc::CYAN;
+        }
+        else if (nFracMode == 1)
+        {
+            calcName = "MPI and OpenMP";
+            color = olc::YELLOW;
+        }
+        else if (nFracMode == 2)
+        {
+            calcName = "MPI and OpenMP with AVX2/SIMD";
+            color = olc::GREEN;
+        }
+
+        DrawString(0, 30, calcName, color, 3);
+        DrawString(0, 60, "Time Taken: " + std::to_string(fTime.count()) + "s", color, 3);
+		DrawString(0, 90, "Iterations: " + std::to_string(nMaxIteration), olc::WHITE, 3);
+		DrawString(0, 120, "Calc Mode: " + std::to_string(nFracMode + 1) + "/ 3", color, 3);
+		DrawString(0, 150, "Draw Mode: F" + std::to_string(nColorMode + 1) + "/ F3", olc::WHITE, 3);
 
 		return true;
 	}
@@ -544,7 +607,7 @@ int main(int argc, char** argv)
                     break;
                 
                 // Compute
-                CreateFractal({pParam[0], pParam[1]}, {pParam[2], pParam[3]}, 
+                CreateFractalParallelAVX({pParam[0], pParam[1]}, {pParam[2], pParam[3]}, 
                             {pParam[4], pParam[5]}, {pParam[6], pParam[7]}, 
                             pFractalIterations, pParam[8], pParam[3]);
                 
