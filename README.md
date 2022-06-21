@@ -4,6 +4,16 @@
 
 ## Features!
 
+### Clusterization with MPI!
+> Dynamically divide the fractal in N nodes, beeing N <= Screen Width
+> Return the value from each nodes to the master node
+### Parallelization with OpenMP!
+> Dynamic divide the portion of the fractal in each node, using MPI
+
+### Multi-PLataform Rendering!
+> Using olcPixelGameEngine to Draw the fractal in a window!
+### Handle pan and Zoom!
+> Implemented pan and zoom in the fractal, supporting before features!
 ### Different coloring algorithms:
 > <img width="399" alt="image" src="https://user-images.githubusercontent.com/42661760/174455667-a2f3f7c1-568b-43c5-bef0-83225e35b7d7.png">
 > <img width="401" alt="image" src="https://user-images.githubusercontent.com/42661760/174455671-e1e14f78-8cbb-4af5-b087-adaeeb5d8b4b.png">
@@ -21,15 +31,17 @@ Compilar && rodar
 ## Rodar
 > make run
 
-## Compilar
+## Compilar Manualmente
 > mpic++ -fopenmp  Application.cpp -lX11 -lGL -lpthread -lpng -lstdc++fs -std=c++17 -o app
 
-## Rodar
+## Rodar Manualmente
 > mpirun --hostfile hosts ./app
 
 ## TODO:
-- Separate regions of Mandelbrot Between computers
-- Already paralelize with OpenMP, but has to really get better.
+- Intrinsec Functions
+- CUDA(?)
 
 ## DONE:
 - MakeFile
+- Separate regions of Mandelbrot Between computers
+- Already paralelize with OpenMP, but has to really get better.
