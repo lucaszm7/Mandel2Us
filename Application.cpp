@@ -127,11 +127,24 @@ void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
     double x_scale = (frac_real.y - frac_real.x) / (double(pixel_br.x) - double(pixel_tl.x));
 	double y_scale = (frac_imag.y - frac_imag.x) / (double(pixel_br.y) - double(pixel_tl.y));
 
+    double x_pos = frac_real.x;
+
+    int x_offset = 0;
+    int x, y;
+
     // 64-bit "double" registers
     __m256d _aa, _bb, _ca, _cb, _a, _b, _zr2, _zi2, _two, _four, _mask1;
 
     // 64-bit "int" registers
     __m256i _n, _maxIt, _mask2, _c, _one;
+
+    // start of Y
+    __m256d _y_pos_offsets, _y_pos, _y_scale, _y_jump;
+
+    _y_scale = _mm256_set1_pd(y_scale);
+    _y_jump = _mm256_set1_pd(y_scale * 4);
+    _y_pos_offsets = _mm256_set_pd(0, 1, 2, 3);
+    _y_pos_offsets = _mm256_mul_pd(_y_pos_offsets, _y_scale);
 
     // | 32.0 | 32.0 | 32.0 | 32.0 | 
     _maxIt = _mm256_set1_epi64x(nMaxIteration);
@@ -145,8 +158,19 @@ void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
     // | 4.0 | 4.0 | 4.0 | 4.0 | 
     _four = _mm256_set1_pd(4.0);
 
+    auto CHUNK = (pixel_br.x - pixel_tl.x) / 8;
+    #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs())
     for (int x = pixel_tl.x; x < pixel_br.x; x++)
     {
+        // Calc start x
+        x_pos = (frac_real.x + (x * x_scale));
+
+        // Reset y position
+        _bb =  _mm256_set1_pd(frac_imag.x);
+        _y_pos = _mm256_add_pd(_bb, _y_pos_offsets);
+
+        _ca = _mm256_set1_pd(x_pos);
+
         for (int y = pixel_tl.y; y < pixel_br.y; y += 4)
         {
 
@@ -155,8 +179,7 @@ void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
 
             _n = _mm256_setzero_si256();
 
-            _ca = _a;
-            _cb = _b;
+            _cb = _y_pos;
 
             repeat:
 
@@ -225,7 +248,9 @@ void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
             pFractalIterations[(x * nScreenHeightSize) + y + 2] = int(_n[2]);
             pFractalIterations[(x * nScreenHeightSize) + y + 3] = int(_n[0]);
 
+            _y_pos = _mm256_add_pd(_y_pos, _y_jump);
         }
+        // x_pos += x_scale;
     }
 }
 
