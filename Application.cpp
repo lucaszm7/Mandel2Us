@@ -123,13 +123,11 @@ void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
     
     nScreenHeightSize = pixel_br.x;
     
-    // TODO: refac for doing with scale, faster and better than with "map"
     double x_scale = (frac_real.y - frac_real.x) / (double(pixel_br.x) - double(pixel_tl.x));
 	double y_scale = (frac_imag.y - frac_imag.x) / (double(pixel_br.y) - double(pixel_tl.y));
 
     double x_pos = frac_real.x;
 
-    int x_offset = 0;
     int x, y;
 
     // 64-bit "double" registers
@@ -158,7 +156,7 @@ void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
     // | 4.0 | 4.0 | 4.0 | 4.0 | 
     _four = _mm256_set1_pd(4.0);
 
-    auto CHUNK = (pixel_br.x - pixel_tl.x) / 8;
+    auto CHUNK = (pixel_br.x - pixel_tl.x) / 128;
     #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs())
     for (int x = pixel_tl.x; x < pixel_br.x; x++)
     {
