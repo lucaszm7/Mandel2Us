@@ -27,29 +27,46 @@ void DivideFractal(double** pParam,
                    unsigned int nMaxIteration, unsigned int nNodesSize,
                    double exit_code = 0)
 {
-    olc::vi2d new_pixel_tl = pixel_tl;
-    olc::vi2d new_pixel_br = { pixel_br.x / nNodesSize, pixel_br.y};
-
-    double frac_real_part = std::abs(frac_real.y - frac_real.x) / nNodesSize;
-    olc::vd2d new_frac_real = {frac_real.x, frac_real.x + frac_real_part};
-
-    for(int i = 0; i < nNodesSize; ++i)
+    if(nNodesSize == 1)
     {
-        pParam[i][0] = new_pixel_tl.x;
-        pParam[i][1] = new_pixel_tl.y;
-        pParam[i][2] = new_pixel_br.x;
-        pParam[i][3] = new_pixel_br.y;
-        pParam[i][4] = new_frac_real.x;
-        pParam[i][5] = new_frac_real.y;
-        pParam[i][6] = frac_imag.x;
-        pParam[i][7] = frac_imag.y;
-        pParam[i][8] = nMaxIteration;
-        pParam[i][9] = exit_code;
+        pParam[0][0] = pixel_tl.x;
+        pParam[0][1] = pixel_tl.y;
+        pParam[0][2] = pixel_br.x;
+        pParam[0][3] = pixel_br.y;
+        pParam[0][4] = frac_real.x;
+        pParam[0][5] = frac_real.y;
+        pParam[0][6] = frac_imag.x;
+        pParam[0][7] = frac_imag.y;
+        pParam[0][8] = nMaxIteration;
+        pParam[0][9] = exit_code;
+    }
 
-        new_pixel_tl.x = new_pixel_br.x;
-        new_pixel_br.x = new_pixel_br.x + (pixel_br.x / nNodesSize);
-        
-        new_frac_real = {new_frac_real.y, new_frac_real.y + frac_real_part};
+    else
+    {
+        olc::vi2d new_pixel_tl = pixel_tl;
+        olc::vi2d new_pixel_br = { pixel_br.x / nNodesSize, pixel_br.y};
+
+        double frac_real_part = std::abs(frac_real.y - frac_real.x) / nNodesSize;
+        olc::vd2d new_frac_real = {frac_real.x, frac_real.x + frac_real_part};
+
+        for(int i = 0; i < nNodesSize; ++i)
+        {
+            pParam[i][0] = new_pixel_tl.x;
+            pParam[i][1] = new_pixel_tl.y;
+            pParam[i][2] = new_pixel_br.x;
+            pParam[i][3] = new_pixel_br.y;
+            pParam[i][4] = new_frac_real.x;
+            pParam[i][5] = new_frac_real.y;
+            pParam[i][6] = frac_imag.x;
+            pParam[i][7] = frac_imag.y;
+            pParam[i][8] = nMaxIteration;
+            pParam[i][9] = exit_code;
+
+            new_pixel_tl.x = new_pixel_br.x;
+            new_pixel_br.x = new_pixel_br.x + (pixel_br.x / nNodesSize);
+            
+            new_frac_real = {new_frac_real.y, new_frac_real.y + frac_real_part};
+        }
     }
 }
 
@@ -77,7 +94,7 @@ void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
             double ca = a;
             double cb = b;
 
-            while (n < nMaxIteration)
+            while (n < nMaxIteration && a < 4 )
             {
                 // z1 = z0^2 + c
                 // z2 = c^2 + c
@@ -90,10 +107,6 @@ void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
                 // C^2 + C
                 a = aa + ca;
                 b = bb + cb;
-
-                // It diverges, or not...
-                if (a + b > 4)
-                    break;
 
                 n++;
             }
@@ -104,51 +117,140 @@ void CreateFractal(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
 
 void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br, 
                        const olc::vd2d& frac_real, const olc::vd2d& frac_imag,
-                       int* pFractalIterations, unsigned int nMaxIteration,
+                       int* pFractalIterations, int nMaxIteration,
                        int nScreenHeightSize = 0)
 {
     
-    if (nScreenHeightSize == 0)
-        nScreenHeightSize = pixel_br.x;
+    nScreenHeightSize = pixel_br.x;
     
-    // auto CHUNK = (pixel_br.x - pixel_tl.x) / 64;
-    auto CHUNK = (pixel_br.x - pixel_tl.x) / 64;
+    // TODO: refac for doing with scale, faster and better than with "map"
+    double x_scale = (frac_real.y - frac_real.x) / (double(pixel_br.x) - double(pixel_tl.x));
+	double y_scale = (frac_imag.y - frac_imag.x) / (double(pixel_br.y) - double(pixel_tl.y));
 
-    #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) 
+    double x_pos = frac_real.x;
+
+    int x_offset = 0;
+    int x, y;
+
+    // 64-bit "double" registers
+    __m256d _aa, _bb, _ca, _cb, _a, _b, _zr2, _zi2, _two, _four, _mask1;
+
+    // 64-bit "int" registers
+    __m256i _n, _maxIt, _mask2, _c, _one;
+
+    // start of Y
+    __m256d _y_pos_offsets, _y_pos, _y_scale, _y_jump;
+
+    _y_scale = _mm256_set1_pd(y_scale);
+    _y_jump = _mm256_set1_pd(y_scale * 4);
+    _y_pos_offsets = _mm256_set_pd(0, 1, 2, 3);
+    _y_pos_offsets = _mm256_mul_pd(_y_pos_offsets, _y_scale);
+
+    // | 32.0 | 32.0 | 32.0 | 32.0 | 
+    _maxIt = _mm256_set1_epi64x(nMaxIteration);
+
+    // | 1.0 | 1.0 | 1.0 | 1.0 | 
+    _one = _mm256_set1_epi64x(1);
+
+    // | 2.0 | 2.0 | 2.0 | 2.0 | 
+    _two = _mm256_set1_pd(2.0);
+
+    // | 4.0 | 4.0 | 4.0 | 4.0 | 
+    _four = _mm256_set1_pd(4.0);
+
+    auto CHUNK = (pixel_br.x - pixel_tl.x) / 8;
+    #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs())
     for (int x = pixel_tl.x; x < pixel_br.x; x++)
     {
-        for (int y = pixel_tl.y; y < pixel_br.y; y++)
+        // Calc start x
+        x_pos = (frac_real.x + (x * x_scale));
+
+        // Reset y position
+        _bb =  _mm256_set1_pd(frac_imag.x);
+        _y_pos = _mm256_add_pd(_bb, _y_pos_offsets);
+
+        _ca = _mm256_set1_pd(x_pos);
+
+        for (int y = pixel_tl.y; y < pixel_br.y; y += 4)
         {
-            double a = map(x, pixel_tl.x, pixel_br.x, frac_real.x, frac_real.y);
-            double b = map(y, pixel_tl.y, pixel_br.y, frac_imag.x, frac_imag.y);
 
-            int n = 0;
+            _a = _mm256_setzero_pd();
+            _b = _mm256_setzero_pd();
 
-            double ca = a;
-            double cb = b;
+            _n = _mm256_setzero_si256();
 
-            while (n < nMaxIteration)
-            {
-                // z1 = z0^2 + c
-                // z2 = c^2 + c
-                //      c^2 = a^2 - b^2 + 2abi
+            _cb = _y_pos;
 
-                // C^2
-                double aa = a*a - b*b;
-                double bb = 2 * a * b;
+            repeat:
 
-                // C^2 + C
-                a = aa + ca;
-                b = bb + cb;
+            // double ca = a;
+            // double cb = b;
 
-                // It diverges, or not...
-                if (a + b > 4)
-                    break;
+            // double aa = a*a - b*b;
+            // double bb = 2 * a * b;
 
-                n++;
-            }
-            pFractalIterations[(x * nScreenHeightSize) + y] = n;
+            // a = aa + ca;
+            // b = bb + cb;
+
+            // Multiply 256-bit registers in parallel, as they are doubles
+
+            // a * a
+            _zr2 = _mm256_mul_pd(_a, _a); // a * a
+
+            // b * b
+            _zi2 = _mm256_mul_pd(_b, _b); // b * b
+
+            // a*a - b*b
+            _aa = _mm256_sub_pd(_zr2, _zi2); // (a * a) - (b * a)
+
+            // a * b
+            _bb = _mm256_mul_pd(_a, _b); // a * b
+
+            // (bb * 2)
+            _b = _mm256_mul_pd(_bb, _two); // ((a * b) * 2)
+
+            // (bb) + cb
+            _b = _mm256_add_pd(_b, _cb); // ((a * b) * 2) + cb
+
+            // aa + ca
+            _a = _mm256_add_pd(_aa, _ca); // ((a * a) - (b * b)) + ca
+
+
+            // while ((zr2 + zi2) < 4.0 && n < nMaxIteration)
+
+            // aa = (a * a + b * b)
+            _aa = _mm256_add_pd(_zr2, _zi2);
+
+            // m1 = if(aa < 4.0)
+            _mask1 = _mm256_cmp_pd(_aa, _four, _CMP_LT_OQ);
+
+            // m2 = (nMaxIteration > n)
+            _mask2 = _mm256_cmpgt_epi64(_maxIt, _n);
+
+            // m2 = m1 AND m2 = if(aa < 4.0 && nMaxIterations > n)
+            _mask2 = _mm256_and_si256(_mask2, _mm256_castpd_si256(_mask1));
+
+            // mask2 AND 00...01
+            // mask2 = |00...00|11...11|00...00|11...11|
+            // one   = |00...01|00...01|00...01|00...01|
+            // c     = |00...00|00...01|00...00|00...00| // just the 2 element has to be incremented
+            _c = _mm256_and_si256(_mask2, _one);
+
+            // n + c
+            _n = _mm256_add_epi64(_n, _c);
+
+            // if ((a * a + b * b) < 4.0 && n < nMaxIterations) goto repeat
+            if (_mm256_movemask_pd(_mm256_castsi256_pd(_mask2)) > 0)
+                goto repeat;
+
+            pFractalIterations[(x * nScreenHeightSize) + y + 0] = int(_n[3]);
+            pFractalIterations[(x * nScreenHeightSize) + y + 1] = int(_n[1]);
+            pFractalIterations[(x * nScreenHeightSize) + y + 2] = int(_n[2]);
+            pFractalIterations[(x * nScreenHeightSize) + y + 3] = int(_n[0]);
+
+            _y_pos = _mm256_add_pd(_y_pos, _y_jump);
         }
+        // x_pos += x_scale;
     }
 }
 
@@ -337,7 +439,7 @@ public:
                     {
                         int n = pFractalIterations[x * ScreenWidth() + y];
                         Draw(x, y, olc::Pixel(n*n, n, n*3, 255));
-                    } 
+                    }
                 } break;
         }
 
