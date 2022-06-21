@@ -119,6 +119,7 @@ void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
     {
         for (int y = pixel_tl.y; y < pixel_br.y; y++)
         {
+            // Z(n+1) = Z(n)^2 + C(a(x) + b(y)i)
             double a = map(x, pixel_tl.x, pixel_br.x, frac_real.x, frac_real.y);
             double b = map(y, pixel_tl.y, pixel_br.y, frac_imag.x, frac_imag.y);
 
@@ -127,7 +128,7 @@ void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
             double ca = a;
             double cb = b;
 
-            while (n < nMaxIteration)
+            while (n < nMaxIteration && a < 4)
             {
                 // z1 = z0^2 + c
                 // z2 = c^2 + c
@@ -140,10 +141,6 @@ void CreateFractalAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
                 // C^2 + C
                 a = aa + ca;
                 b = bb + cb;
-
-                // It diverges, or not...
-                if (a + b > 4)
-                    break;
 
                 n++;
             }
