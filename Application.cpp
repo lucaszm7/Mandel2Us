@@ -194,8 +194,7 @@ void CreateFractalParallelAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_
 
     auto CHUNK = (pixel_br.x - pixel_tl.x) / 128;
     #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) \
-                             shared(pFractalIterations) \
-                             firstprivate(_y_pos_offsets, _y_pos, _y_scale, _y_jump, _n, _maxIt, _mask2, _c, _one, _aa, _bb, _ca, _cb, _a, _b, _zr2, _zi2, _two, _four, _mask1)
+                             private(_n)
     for (int x = pixel_tl.x; x < pixel_br.x; x++)
     {
         // Calc start x
@@ -555,7 +554,7 @@ protected:
 int main(int argc, char** argv)
 {
 
-    int nScreenWidth  = 800;
+    int nScreenWidth  = 1200;
     int nScreenHeight = 800;
     int nMyRank, nNodesSize;
 
