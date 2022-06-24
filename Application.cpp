@@ -166,8 +166,6 @@ void CreateFractalParallelAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_
 
     double x_pos = frac_real.x;
 
-    int x, y;
-
     // 64-bit "double" registers
     __m256d _aa, _bb, _ca, _cb, _a, _b, _zr2, _zi2, _two, _four, _mask1;
 
@@ -195,11 +193,13 @@ void CreateFractalParallelAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_
     _four = _mm256_set1_pd(4.0);
 
     auto CHUNK = (pixel_br.x - pixel_tl.x) / 128;
-    #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs())
+    #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) \
+                             shared(pFractalIterations) \
+                             firstprivate(_y_pos_offsets, _y_pos, _y_scale, _y_jump, _n, _maxIt, _mask2, _c, _one, _aa, _bb, _ca, _cb, _a, _b, _zr2, _zi2, _two, _four, _mask1)
     for (int x = pixel_tl.x; x < pixel_br.x; x++)
     {
         // Calc start x
-        x_pos = (frac_real.x + (x * x_scale));
+        x_pos = (frac_real.x + ((x) * x_scale));
 
         // Reset y position
         _bb =  _mm256_set1_pd(frac_imag.x);
@@ -470,7 +470,7 @@ public:
                         int i = pFractalIterations[x * ScreenWidth() + y];
                         float n = (float)i;
                         float a = 0.1f;
-                        // Thank you @Eriksonn - Wonderful Magic Fractal Oddball Man
+                        // Coloring Algorithm - Picked from - @Eriksonn
                         Draw(x, y, olc::PixelF(0.5f * sin(a * n) + 0.5f, 0.5f * sin(a * n + 2.094f) + 0.5f,  0.5f * sin(a * n + 4.188f) + 0.5f));
                     }
                 } break;
