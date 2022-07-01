@@ -503,10 +503,10 @@ public:
         }
 
         DrawString(0, 30, calcName, color, 3);
-        DrawString(0, 60, "Time Taken: " + std::to_string(fTime.count()) + "s", color, 3);
-		DrawString(0, 90, "Iterations: " + std::to_string(nMaxIteration), olc::WHITE, 3);
-		DrawString(0, 120, "Calc Mode: " + std::to_string(nFracMode + 1) + "/ 3", color, 3);
-		DrawString(0, 150, "Draw Mode: F" + std::to_string(nColorMode + 1) + "/ F3", olc::WHITE, 3);
+        DrawString(0, 60, "Tempo decorrido: " + std::to_string(fTime.count()) + "s", color, 3);
+		DrawString(0, 90, "Iteracoes: " + std::to_string(nMaxIteration), olc::WHITE, 3);
+		DrawString(0, 120, "Modelo de programacao: " + std::to_string(nFracMode + 1) + "/ 3", color, 3);
+		DrawString(0, 150, "Coloracao: F" + std::to_string(nColorMode + 1) + "/ F3", olc::WHITE, 3);
 
 		return true;
 	}
@@ -554,15 +554,17 @@ protected:
 int main(int argc, char** argv)
 {
 
-    int nScreenWidth  = 1200;
+    int nScreenWidth  = 800;
     int nScreenHeight = 800;
     int nMyRank, nNodesSize;
 
     if(!UseMPI)
     {
+        MPI::Init(argc, argv);
         MandelbrotFractal demo;
         if (demo.Construct(nScreenWidth, nScreenHeight, 1, 1, false, false))
             demo.Start();
+        MPI::Finalize();
     }
 
     else
