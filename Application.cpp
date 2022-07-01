@@ -519,7 +519,7 @@ public:
         delete[] pNodesParam;
     }
 
-// Pan and Zoom Created following tutorials on channel @OneLoneCoder
+// Pan and Zoom Created with help of tutorials on channel @OneLoneCoder
 protected:
     // Pan & Zoom variables
 	olc::vd2d vOffset = { 0.0, 0.0 };
