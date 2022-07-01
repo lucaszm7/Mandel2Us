@@ -372,7 +372,7 @@ public:
         // Now we have a smaller screen, and want to map to the world coord
         
         olc::vi2d pixel_tl = {  0,  0 };
-        olc::vi2d pixel_br = {  ScreenWidth(),  ScreenHeight() };
+        olc::vi2d pixel_br = {  nWidth,  nHeight };
 
         olc::vd2d frac_tl = { -2.0, -1.0 };
         olc::vd2d frac_br = {  1.0,  1.0 };
@@ -446,6 +446,7 @@ public:
         {
             case 0: 
                 // Render result to screen
+                #pragma omp parallel for
                 for (int x = 0; x < ScreenWidth(); x++)
                 {
                     for (int y = 0; y < ScreenHeight(); y++)
@@ -462,6 +463,7 @@ public:
                 } break;
 
             case 1:
+                #pragma omp parallel for
                 for (int x = 0; x < ScreenWidth(); x++)
                 {
                     for (int y = 0; y < ScreenHeight(); y++)
@@ -474,6 +476,7 @@ public:
                     }
                 } break;
             case 2:
+                #pragma omp parallel for
                 for (int x = 0; x < ScreenWidth(); x++)
                 {
                     for (int y = 0; y < ScreenHeight(); y++)
@@ -553,7 +556,6 @@ protected:
 
 int main(int argc, char** argv)
 {
-
     int nScreenWidth  = 800;
     int nScreenHeight = 800;
     int nMyRank, nNodesSize;
