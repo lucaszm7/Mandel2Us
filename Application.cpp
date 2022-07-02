@@ -302,9 +302,9 @@ protected:
     int nWidth;
     int nHeight;
 
-    int nMaxIteration = 256;
-    int nColorMode = 2;
-    int nFracMode = 2;
+    int nMaxIteration = 32;
+    int nColorMode = 0;
+    int nFracMode = 0;
 
     int* pFractalIterations;
 
