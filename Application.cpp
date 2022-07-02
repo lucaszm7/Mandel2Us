@@ -313,6 +313,12 @@ protected:
 
     double** pNodesParam;
 
+// UI variables
+protected:
+    std::string calcName;
+    olc::Pixel color;
+    olc::Pixel fracModeColor[3];
+
 public:
 	bool OnUserCreate() override
 	{
