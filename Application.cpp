@@ -392,17 +392,13 @@ public:
         ScreenToFrac(pixel_tl, pixel_br, frac_tl, frac_br, frac_real, frac_imag);
 
         // Calculation Option
-        if (GetKey(olc::Key::K1).bPressed) nFracMode = 0;
-        if (GetKey(olc::Key::K2).bPressed) nFracMode = 1;
-        if (GetKey(olc::Key::K3).bPressed) nFracMode = 2;
-        if (GetKey(olc::Key::K4).bPressed) nFracMode = 3;
-        if (GetKey(olc::Key::K5).bPressed) nFracMode = 4;
+        if (GetKey(olc::Key::K1).bPressed) { nFracMode = 0; }
+        if (GetKey(olc::Key::K2).bPressed) { nFracMode = 1; }
+        if (GetKey(olc::Key::K3).bPressed) { nFracMode = 2; }
         // Color Option
         if (GetKey(olc::Key::F1).bPressed) nColorMode = 0;
         if (GetKey(olc::Key::F2).bPressed) nColorMode = 1;
         if (GetKey(olc::Key::F3).bPressed) nColorMode = 2;
-        if (GetKey(olc::Key::F4).bPressed) nColorMode = 3;
-        if (GetKey(olc::Key::F5).bPressed) nColorMode = 4;
         // Modify the max iteration on the fly
         if (GetKey(olc::UP).bPressed) nMaxIteration += 32;
 		if (GetKey(olc::DOWN).bPressed) nMaxIteration -= 32;
@@ -562,7 +558,7 @@ protected:
 
 int main(int argc, char** argv)
 {
-    int nScreenWidth  = 800;
+    int nScreenWidth  = 1200;
     int nScreenHeight = 800;
     int nMyRank, nNodesSize;
 
