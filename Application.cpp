@@ -489,30 +489,57 @@ public:
                 } break;
         }
 
-        std::string calcName;
-        olc::Pixel color;
+        
         if(nFracMode == 0)
         {
-            calcName = "Just MPI";
+            calcName = "Sequencial";
             color = olc::CYAN;
+            fracModeColor[0] = olc::CYAN;
+            fracModeColor[1] = olc::WHITE;
+            fracModeColor[2] = olc::WHITE;
         }
         else if (nFracMode == 1)
         {
-            calcName = "MPI and OpenMP";
+            calcName = "Paralelo";
             color = olc::YELLOW;
+            fracModeColor[0] = olc::WHITE;
+            fracModeColor[1] = olc::YELLOW;
+            fracModeColor[2] = olc::WHITE;
         }
         else if (nFracMode == 2)
         {
-            calcName = "MPI and OpenMP with AVX2/SIMD";
+            calcName = "Paralelo c/ Ins. Vetoriais.";
             color = olc::GREEN;
+            fracModeColor[0] = olc::WHITE;
+            fracModeColor[1] = olc::WHITE;
+            fracModeColor[2] = olc::GREEN;
         }
 
-        DrawString(0, 30, calcName, color, 3);
-        DrawString(0, 60, "Tempo decorrido: " + std::to_string(fTime.count()) + "s", color, 3);
-		DrawString(0, 90, "Iteracoes: " + std::to_string(nMaxIteration), olc::WHITE, 3);
-		DrawString(0, 120, "Modelo de programacao: " + std::to_string(nFracMode + 1) + "/ 3", color, 3);
-		DrawString(0, 150, "Coloracao: F" + std::to_string(nColorMode + 1) + "/ F3", olc::WHITE, 3);
+        constexpr int uiDist = 25;
 
+        DrawString(0, 10, calcName, color, 2);
+        DrawString(0, 35, "Tempo decorrido: " + std::to_string(fTime.count()) + "s", color, 2);
+		DrawString(0, 60, "Iteracoes: " + std::to_string(nMaxIteration), olc::WHITE, 2);
+		DrawString(0, 85,"Modelo de programacao: " + std::to_string(nFracMode + 1) + "/ 3", color, 2);
+		DrawString(0, 110,"Coloracao: F" + std::to_string(nColorMode + 1) + "/ F3", olc::WHITE, 2);
+
+		DrawString(700, 10 + uiDist *  0, "Controles:" , olc::Pixel(3, 111, 252), 2);
+		DrawString(700, 10 + uiDist *  1, "Mover:" , olc::Pixel(96, 164, 252), 2);
+		DrawString(700, 10 + uiDist *  2, "Segurar e Arrastar com mouse" , olc::WHITE, 2);
+		DrawString(700, 10 + uiDist *  3, "Zoom:" , olc::Pixel(96, 164, 252), 2);
+		DrawString(700, 10 + uiDist *  4, "Tecla: E - Zoom In" , olc::WHITE, 2);
+		DrawString(700, 10 + uiDist *  5, "Tecla: Q - Zoom Out" , olc::WHITE, 2);
+		DrawString(700, 10 + uiDist *  6, "Mudar numero de iteracoes:" , olc::Pixel(96, 164, 252), 2);
+		DrawString(700, 10 + uiDist *  7, "Tecla: UP " , olc::WHITE, 2);
+		DrawString(700, 10 + uiDist *  8, "Tecla: DOWN " , olc::WHITE, 2);
+		DrawString(700, 10 + uiDist *  9, "Mudar o modelo de programacao:" , olc::Pixel(96, 164, 252), 2);
+		DrawString(700, 10 + uiDist * 10, "Tecla: 1 - Sequencial" , fracModeColor[0], 2);
+		DrawString(700, 10 + uiDist * 11, "Tecla: 2 - Paralelo" , fracModeColor[1], 2);
+		DrawString(700, 10 + uiDist * 12, "Tecla: 3 - Paralelo c/ Instruc. Vet." , fracModeColor[2], 2);
+		DrawString(700, 10 + uiDist * 13, "Mudar o modelo de coloracao:" , olc::Pixel(96, 164, 252), 2);
+		DrawString(700, 10 + uiDist * 14, "Tecla: F1 - Blue" , olc::WHITE, 2);
+		DrawString(700, 10 + uiDist * 15, "Tecla: F2 - Grey" , olc::WHITE, 2);
+		DrawString(700, 10 + uiDist * 16, "Tecla: F3 - Red." , olc::WHITE, 2);
 		return true;
 	}
 
