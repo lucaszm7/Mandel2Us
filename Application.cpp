@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include "mpi.h"
 
-bool constexpr UseMPI = false;
+bool constexpr UseMPI = true;
 
 // Drawing Stuff
 #define OLC_PGE_APPLICATION
@@ -44,7 +44,7 @@ void DivideFractal(double** pParam,
     else
     {
         olc::vi2d new_pixel_tl = pixel_tl;
-        olc::vi2d new_pixel_br = { pixel_br.x / nNodesSize, pixel_br.y};
+        olc::vi2d new_pixel_br = { pixel_br.x / (int)nNodesSize, pixel_br.y};
 
         double frac_real_part = std::abs(frac_real.y - frac_real.x) / nNodesSize;
         olc::vd2d new_frac_real = {frac_real.x, frac_real.x + frac_real_part};
@@ -407,42 +407,44 @@ public:
         // Divide Fractal
         DivideFractal(pNodesParam, pixel_tl, pixel_br, frac_real, frac_imag, nMaxIteration, nNodesSize);
 
-        for(int i = 0; i < nNodesSize - 1; i++)
-            MPI::COMM_WORLD.Send((void*)pNodesParam[i], 10, MPI::DOUBLE, i+1, 0);
-        
         // Cont the time with chrono clock
         auto tStart = std::chrono::high_resolution_clock::now();
 
+        for(int i = 0; i < nNodesSize - 1; i++)
+        {
+            MPI::COMM_WORLD.Send((void*)pNodesParam[i], 10, MPI::DOUBLE, i+1, 0);
+        }
+        
         switch (nFracMode)
         {
             case 0:
-                CreateFractalSequential({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
-                            {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
+                CreateFractalSequential({(int)pNodesParam[nNodesSize-1][0], (int)pNodesParam[nNodesSize-1][1]}, 
+                            {(int)pNodesParam[nNodesSize-1][2], (int)pNodesParam[nNodesSize-1][3]}, 
                             {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
                             {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
-                            pFractalIterations, pNodesParam[nNodesSize-1][8]); break;
+                            pFractalIterations, (unsigned int)pNodesParam[nNodesSize-1][8]); break;
             case 1:
-                CreateFractalParallel({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
-                            {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
+                CreateFractalParallel({(int)pNodesParam[nNodesSize-1][0], (int)pNodesParam[nNodesSize-1][1]}, 
+                            {(int)pNodesParam[nNodesSize-1][2], (int)pNodesParam[nNodesSize-1][3]}, 
                             {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
                             {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
-                            pFractalIterations, pNodesParam[nNodesSize-1][8]); break;
+                            pFractalIterations, (unsigned int)pNodesParam[nNodesSize-1][8]); break;
             case 2:
-                CreateFractalParallelAVX({pNodesParam[nNodesSize-1][0], pNodesParam[nNodesSize-1][1]}, 
-                            {pNodesParam[nNodesSize-1][2], pNodesParam[nNodesSize-1][3]}, 
+                CreateFractalParallelAVX({(int)pNodesParam[nNodesSize-1][0], (int)pNodesParam[nNodesSize-1][1]}, 
+                            {(int)pNodesParam[nNodesSize-1][2], (int)pNodesParam[nNodesSize-1][3]}, 
                             {pNodesParam[nNodesSize-1][4], pNodesParam[nNodesSize-1][5]}, 
                             {pNodesParam[nNodesSize-1][6], pNodesParam[nNodesSize-1][7]}, 
-                            pFractalIterations, pNodesParam[nNodesSize-1][8]); break;
+                            pFractalIterations, (unsigned int)pNodesParam[nNodesSize-1][8]); break;
 
         }
-
-        auto tEnd = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> fTime = tEnd - tStart;
 
         for(int i = 0; i < nNodesSize - 1; i++)
         {
             MPI::COMM_WORLD.Recv((void*)(pFractalIterations + ((int)pNodesParam[i][0] * (int)pNodesParam[i][3])), ((ScreenWidth()*ScreenHeight()) / nNodesSize), MPI::INT, i + 1, MPI::ANY_TAG);
         }
+
+        auto tEnd = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> fTime = tEnd - tStart;
 
         switch (nColorMode)
         {
@@ -639,9 +641,9 @@ int main(int argc, char** argv)
                     break;
                 
                 // Compute
-                CreateFractalParallelAVX({pParam[0], pParam[1]}, {pParam[2], pParam[3]}, 
+                CreateFractalParallelAVX({(int)pParam[0], (int)pParam[1]}, {(int)pParam[2], (int)pParam[3]}, 
                             {pParam[4], pParam[5]}, {pParam[6], pParam[7]}, 
-                            pFractalIterations, pParam[8], pParam[3]);
+                            pFractalIterations, (int)pParam[8], (int)pParam[3]);
                 
                 // Send Back
                 MPI::COMM_WORLD.Send((void*)(pFractalIterations + ((int)pParam[0] * (int)pParam[3])), ((nScreenHeight*nScreenWidth)/nNodesSize), MPI::INT, 0, 0);
