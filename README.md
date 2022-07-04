@@ -1,12 +1,14 @@
 # Fractal de Mandelbrot construido em C++ com MPI e OpenMP, e a parte gráfica com olcPixelGameEngine
 
-### Build: Linux
- - make install
- - make gen
- - make run
+## Build: Linux
+ - $> make install
+ - $> make gen
+ - $> make run
+ 
+---
 
-> ![Mandelbrot_Fractal__bigbig_adobe](https://user-images.githubusercontent.com/42661760/171764189-d58f25b9-5090-47b2-baf3-dd0992efab3b.gif)
-> - Video Showcase: https://www.youtube.com/watch?v=9-DVTdkkEjQ
+![Mandelbrot_Fractal__bigbig_adobe](https://user-images.githubusercontent.com/42661760/171764189-d58f25b9-5090-47b2-baf3-dd0992efab3b.gif)
+- Video Showcase: https://www.youtube.com/watch?v=9-DVTdkkEjQ
 
 ## Features!
 
