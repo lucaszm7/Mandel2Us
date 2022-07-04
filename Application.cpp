@@ -76,8 +76,8 @@ void CreateFractalSequential(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_b
                        int nScreenHeightSize = 0)
 {
     
-    nScreenHeightSize = pixel_br.x;
-    for (int x = pixel_tl.x; x < pixel_br.x; x++)
+    nScreenHeightSize = pixel_br.y;
+    for (int x = pixel_tl.x; x < (pixel_br.x - 1); x++)
     {
         for (int y = pixel_tl.y; y < pixel_br.y; y++)
         {
@@ -116,11 +116,11 @@ void CreateFractalParallel(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
                        int nScreenHeightSize = 0)
 {
     
-    nScreenHeightSize = pixel_br.x;
+    nScreenHeightSize = pixel_br.y;
 
     auto CHUNK = (pixel_br.x - pixel_tl.x) / 128;
     #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) 
-    for (int x = pixel_tl.x; x < pixel_br.x; x++)
+    for (int x = pixel_tl.x; x < (pixel_br.x - 1); x++)
     {
         for (int y = pixel_tl.y; y < pixel_br.y; y++)
         {
@@ -159,7 +159,7 @@ void CreateFractalParallelAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_
                        int nScreenHeightSize = 0)
 {
     
-    nScreenHeightSize = pixel_br.x;
+    nScreenHeightSize = pixel_br.y;
     
     double x_scale = (frac_real.y - frac_real.x) / (double(pixel_br.x) - double(pixel_tl.x));
 	double y_scale = (frac_imag.y - frac_imag.x) / (double(pixel_br.y) - double(pixel_tl.y));
@@ -195,7 +195,7 @@ void CreateFractalParallelAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_
     auto CHUNK = (pixel_br.x - pixel_tl.x) / 128;
     #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) \
                              private(_n)
-    for (int x = pixel_tl.x; x < pixel_br.x; x++)
+    for (int x = pixel_tl.x; x < (pixel_br.x - 1); x++)
     {
         // Calc start x
         x_pos = (frac_real.x + ((x) * x_scale));
@@ -453,7 +453,7 @@ public:
                 {
                     for (int y = 0; y < ScreenHeight(); y++)
                     {
-                        int n = pFractalIterations[x * ScreenWidth() + y];
+                        int n = pFractalIterations[x * ScreenHeight() + y];
                         // Coloring Algorithm - Picked from https://solarianprogrammer.com/2013/02/28/mandelbrot-set-cpp-11/
                         double t = (double)n/(double)nMaxIteration;
                         // Use smooth polynomials for r, g, b
@@ -470,7 +470,7 @@ public:
                 {
                     for (int y = 0; y < ScreenHeight(); y++)
                     {
-                        int i = pFractalIterations[x * ScreenWidth() + y];
+                        int i = pFractalIterations[x * ScreenHeight() + y];
                         float n = (float)i;
                         float a = 0.1f;
                         // Coloring Algorithm - Picked from - @Eriksonn
@@ -483,7 +483,7 @@ public:
                 {
                     for (int y = 0; y < ScreenHeight(); y++)
                     {
-                        int n = pFractalIterations[x * ScreenWidth() + y];
+                        int n = pFractalIterations[x * ScreenHeight() + y];
                         Draw(x, y, olc::Pixel(n*n, n, n*3, 255));
                     }
                 } break;
