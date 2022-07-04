@@ -318,6 +318,12 @@ protected:
     std::string calcName;
     olc::Pixel color;
     olc::Pixel fracModeColor[3];
+    olc::Pixel fracColorCol[3];
+    olc::Pixel fracCol;
+
+    olc::Pixel colorIterations = olc::WHITE;
+    olc::Pixel zoomColor[2];
+    olc::Pixel mouseColor;
 
 public:
 	bool OnUserCreate() override
@@ -359,17 +365,21 @@ public:
             vStartPan = vMouse;
         }
 
+        mouseColor = olc::WHITE;
         if(GetMouse(0).bHeld)
         {
             vOffset -= (vMouse - vStartPan) / vScale;
             vStartPan = vMouse;
+            mouseColor = olc::GREEN;
         }
 
         olc::vd2d vMouseBeforeZoom;
         ScreenToWorld(vMouse, vMouseBeforeZoom);
 
-        if (GetKey(olc::Key::E).bHeld) vScale *= 1.1;
-		if (GetKey(olc::Key::Q).bHeld) vScale *= 0.9;
+        zoomColor[0] = olc::WHITE;
+        zoomColor[1] = olc::WHITE;
+        if (GetKey(olc::Key::E).bHeld) { vScale *= 1.1; zoomColor[0] = olc::GREEN; }
+		if (GetKey(olc::Key::Q).bHeld) { vScale *= 0.9; zoomColor[1] = olc::RED; }
 		
 		olc::vd2d vMouseAfterZoom;
 		ScreenToWorld(vMouse, vMouseAfterZoom);
@@ -400,9 +410,9 @@ public:
         if (GetKey(olc::Key::F2).bPressed) nColorMode = 1;
         if (GetKey(olc::Key::F3).bPressed) nColorMode = 2;
         // Modify the max iteration on the fly
-        if (GetKey(olc::UP).bPressed) nMaxIteration += 32;
-		if (GetKey(olc::DOWN).bPressed) nMaxIteration -= 32;
-        if (nMaxIteration < 32) nMaxIteration = 32;
+        if (GetKey(olc::UP).bPressed)   { nMaxIteration += 32; colorIterations.g -= 16; colorIterations.b -= 16; }
+		if (GetKey(olc::DOWN).bPressed) { nMaxIteration -= 32; colorIterations.g += 16; colorIterations.b += 16; }
+        if (nMaxIteration < 32) { nMaxIteration = 32; colorIterations.g = 255; colorIterations.b = 255; }
 
         // Divide Fractal
         DivideFractal(pNodesParam, pixel_tl, pixel_br, frac_real, frac_imag, nMaxIteration, nNodesSize);
@@ -517,21 +527,40 @@ public:
             fracModeColor[2] = olc::GREEN;
         }
 
+        if(nColorMode == 0)
+        {
+            fracCol = fracColorCol[0] = olc::Pixel(126, 156, 247);
+            fracColorCol[1] = olc::WHITE;
+            fracColorCol[2] = olc::WHITE;
+        }
+        else if(nColorMode == 1)
+        {
+            fracColorCol[0] = olc::WHITE;
+            fracCol = fracColorCol[1] = olc::MAGENTA;
+            fracColorCol[2] = olc::WHITE;
+        }
+        else if(nColorMode == 2)
+        {
+            fracColorCol[0] = olc::WHITE;
+            fracColorCol[1] = olc::WHITE;
+            fracCol = fracColorCol[2] = olc::RED;
+        }
+
         constexpr int uiDist = 25;
 
         DrawString(0, 10, calcName, color, 2);
-        DrawString(0, 35, "Tempo decorrido: " + std::to_string(fTime.count()) + "s", color, 2);
-		DrawString(0, 60, "Iteracoes: " + std::to_string(nMaxIteration), olc::WHITE, 2);
-		DrawString(0, 85,"Modelo de programacao: " + std::to_string(nFracMode + 1) + "/ 3", color, 2);
-		DrawString(0, 110,"Coloracao: F" + std::to_string(nColorMode + 1) + "/ F3", olc::WHITE, 2);
+		DrawString(0, 35,"Modelo de programacao: " + std::to_string(nFracMode + 1) + "/ 3", color, 2);
+        DrawString(0, 60, "Tempo decorrido: " + std::to_string(fTime.count()) + "s", color, 2);
+		DrawString(0, 85, "Carga Computacional (iteracoes): " + std::to_string(nMaxIteration), colorIterations, 2);
+		DrawString(0, 110,"Coloracao: F" + std::to_string(nColorMode + 1) + "/ F3", fracCol, 2);
 
 		DrawString(700, 10 + uiDist *  0, "Controles:" , olc::Pixel(3, 111, 252), 2);
 		DrawString(700, 10 + uiDist *  1, "Mover:" , olc::Pixel(96, 164, 252), 2);
-		DrawString(700, 10 + uiDist *  2, "Segurar e Arrastar com mouse" , olc::WHITE, 2);
+		DrawString(700, 10 + uiDist *  2, "Segurar e Arrastar com mouse" , mouseColor, 2);
 		DrawString(700, 10 + uiDist *  3, "Zoom:" , olc::Pixel(96, 164, 252), 2);
-		DrawString(700, 10 + uiDist *  4, "Tecla: E - Zoom In" , olc::WHITE, 2);
-		DrawString(700, 10 + uiDist *  5, "Tecla: Q - Zoom Out" , olc::WHITE, 2);
-		DrawString(700, 10 + uiDist *  6, "Mudar numero de iteracoes:" , olc::Pixel(96, 164, 252), 2);
+		DrawString(700, 10 + uiDist *  4, "Tecla: E - Zoom In" , zoomColor[0], 2);
+		DrawString(700, 10 + uiDist *  5, "Tecla: Q - Zoom Out" , zoomColor[1], 2);
+		DrawString(700, 10 + uiDist *  6, "Mudar carga computacional (iteracoes):" , olc::Pixel(96, 164, 252), 2);
 		DrawString(700, 10 + uiDist *  7, "Tecla: UP " , olc::WHITE, 2);
 		DrawString(700, 10 + uiDist *  8, "Tecla: DOWN " , olc::WHITE, 2);
 		DrawString(700, 10 + uiDist *  9, "Mudar o modelo de programacao:" , olc::Pixel(96, 164, 252), 2);
@@ -539,9 +568,9 @@ public:
 		DrawString(700, 10 + uiDist * 11, "Tecla: 2 - Paralelo" , fracModeColor[1], 2);
 		DrawString(700, 10 + uiDist * 12, "Tecla: 3 - Paralelo c/ Instruc. Vet." , fracModeColor[2], 2);
 		DrawString(700, 10 + uiDist * 13, "Mudar o modelo de coloracao:" , olc::Pixel(96, 164, 252), 2);
-		DrawString(700, 10 + uiDist * 14, "Tecla: F1 - Blue" , olc::WHITE, 2);
-		DrawString(700, 10 + uiDist * 15, "Tecla: F2 - Grey" , olc::WHITE, 2);
-		DrawString(700, 10 + uiDist * 16, "Tecla: F3 - Red." , olc::WHITE, 2);
+		DrawString(700, 10 + uiDist * 14, "Tecla: F1 - Azul" , fracColorCol[0], 2);
+		DrawString(700, 10 + uiDist * 15, "Tecla: F2 - Rosa" , fracColorCol[1], 2);
+		DrawString(700, 10 + uiDist * 16, "Tecla: F3 - Vermelho." , fracColorCol[2], 2);
 		return true;
 	}
 
