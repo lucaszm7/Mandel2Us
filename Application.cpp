@@ -6,7 +6,7 @@
 // Parallelization Stuff
 #include <omp.h>
 #include <pthread.h>
-#include "mpi.h"
+// #include "mpi.h"
 
 bool constexpr UseMPI = false;
 
@@ -76,8 +76,8 @@ void CreateFractalSequential(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_b
                        int nScreenHeightSize = 0)
 {
     
-    nScreenHeightSize = pixel_br.x;
-    for (int x = pixel_tl.x; x < pixel_br.x; x++)
+    nScreenHeightSize = pixel_br.y;
+    for (int x = pixel_tl.x; x < (pixel_br.x - 1); x++)
     {
         for (int y = pixel_tl.y; y < pixel_br.y; y++)
         {
@@ -116,11 +116,11 @@ void CreateFractalParallel(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_br,
                        int nScreenHeightSize = 0)
 {
     
-    nScreenHeightSize = pixel_br.x;
+    nScreenHeightSize = pixel_br.y;
 
     auto CHUNK = (pixel_br.x - pixel_tl.x) / 128;
     #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) 
-    for (int x = pixel_tl.x; x < pixel_br.x; x++)
+    for (int x = pixel_tl.x; x < (pixel_br.x - 1); x++)
     {
         for (int y = pixel_tl.y; y < pixel_br.y; y++)
         {
@@ -159,7 +159,7 @@ void CreateFractalParallelAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_
                        int nScreenHeightSize = 0)
 {
     
-    nScreenHeightSize = pixel_br.x;
+    nScreenHeightSize = pixel_br.y;
     
     double x_scale = (frac_real.y - frac_real.x) / (double(pixel_br.x) - double(pixel_tl.x));
 	double y_scale = (frac_imag.y - frac_imag.x) / (double(pixel_br.y) - double(pixel_tl.y));
@@ -195,7 +195,7 @@ void CreateFractalParallelAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_
     auto CHUNK = (pixel_br.x - pixel_tl.x) / 128;
     #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) \
                              private(_n)
-    for (int x = pixel_tl.x; x < pixel_br.x; x++)
+    for (int x = pixel_tl.x; x < (pixel_br.x - 1); x++)
     {
         // Calc start x
         x_pos = (frac_real.x + ((x) * x_scale));
@@ -334,9 +334,9 @@ public:
         }
         else
         {
-            nNodesSize = MPI::COMM_WORLD.Get_size();
+            nNodesSize = 1; // MPI::COMM_WORLD.Get_size();
             std::cout << "Nodes size: " << nNodesSize << "\n";
-            nMyRank = MPI::COMM_WORLD.Get_rank();
+            nMyRank = 0; // MPI::COMM_WORLD.Get_rank();
         }
 
         pNodesParam = new double*[nNodesSize];
@@ -407,8 +407,8 @@ public:
         // Divide Fractal
         DivideFractal(pNodesParam, pixel_tl, pixel_br, frac_real, frac_imag, nMaxIteration, nNodesSize);
 
-        for(int i = 0; i < nNodesSize - 1; i++)
-            MPI::COMM_WORLD.Send((void*)pNodesParam[i], 10, MPI::DOUBLE, i+1, 0);
+        // for(int i = 0; i < nNodesSize - 1; i++)
+        //     MPI::COMM_WORLD.Send((void*)pNodesParam[i], 10, MPI::DOUBLE, i+1, 0);
         
         // Cont the time with chrono clock
         auto tStart = std::chrono::high_resolution_clock::now();
@@ -441,7 +441,7 @@ public:
 
         for(int i = 0; i < nNodesSize - 1; i++)
         {
-            MPI::COMM_WORLD.Recv((void*)(pFractalIterations + ((int)pNodesParam[i][0] * (int)pNodesParam[i][3])), ((ScreenWidth()*ScreenHeight()) / nNodesSize), MPI::INT, i + 1, MPI::ANY_TAG);
+            // MPI::COMM_WORLD.Recv((void*)(pFractalIterations + ((int)pNodesParam[i][0] * (int)pNodesParam[i][3])), ((ScreenWidth()*ScreenHeight()) / nNodesSize), MPI::INT, i + 1, MPI::ANY_TAG);
         }
 
         switch (nColorMode)
@@ -453,7 +453,7 @@ public:
                 {
                     for (int y = 0; y < ScreenHeight(); y++)
                     {
-                        int n = pFractalIterations[x * ScreenWidth() + y];
+                        int n = pFractalIterations[x * ScreenHeight() + y];
                         // Coloring Algorithm - Picked from https://solarianprogrammer.com/2013/02/28/mandelbrot-set-cpp-11/
                         double t = (double)n/(double)nMaxIteration;
                         // Use smooth polynomials for r, g, b
@@ -470,7 +470,7 @@ public:
                 {
                     for (int y = 0; y < ScreenHeight(); y++)
                     {
-                        int i = pFractalIterations[x * ScreenWidth() + y];
+                        int i = pFractalIterations[x * ScreenHeight() + y];
                         float n = (float)i;
                         float a = 0.1f;
                         // Coloring Algorithm - Picked from - @Eriksonn
@@ -483,7 +483,7 @@ public:
                 {
                     for (int y = 0; y < ScreenHeight(); y++)
                     {
-                        int n = pFractalIterations[x * ScreenWidth() + y];
+                        int n = pFractalIterations[x * ScreenHeight() + y];
                         Draw(x, y, olc::Pixel(n*n, n, n*3, 255));
                     }
                 } break;
@@ -591,19 +591,19 @@ int main(int argc, char** argv)
 
     if(!UseMPI)
     {
-        MPI::Init(argc, argv);
+        // MPI::Init(argc, argv);
         MandelbrotFractal demo;
         if (demo.Construct(nScreenWidth, nScreenHeight, 1, 1, false, false))
             demo.Start();
-        MPI::Finalize();
+        // MPI::Finalize();
     }
 
     else
     {
-        MPI::Init(argc, argv);
+        // MPI::Init(argc, argv);
 
-        nNodesSize = MPI::COMM_WORLD.Get_size();
-        nMyRank = MPI::COMM_WORLD.Get_rank();
+        // nNodesSize = MPI::COMM_WORLD.Get_size();
+        // nMyRank = MPI::COMM_WORLD.Get_rank();
         // Just master node create window
         if(nMyRank == 0)
         {
@@ -617,7 +617,7 @@ int main(int argc, char** argv)
             {
                 pFinishCode[i] = new double[10];
                 pFinishCode[i][9] = -1.0;
-                MPI::COMM_WORLD.Send((void*)pFinishCode[i], 10, MPI::DOUBLE, i+1, 0);
+                // MPI::COMM_WORLD.Send((void*)pFinishCode[i], 10, MPI::DOUBLE, i+1, 0);
                 delete[] pFinishCode[i];
             }
             delete[] pFinishCode;
@@ -634,7 +634,7 @@ int main(int argc, char** argv)
             while(pParam[9] >= 0)
             {
                 // Receive
-                MPI::COMM_WORLD.Recv((void*)pParam, 10, MPI::DOUBLE, 0, MPI::ANY_TAG);
+                // MPI::COMM_WORLD.Recv((void*)pParam, 10, MPI::DOUBLE, 0, MPI::ANY_TAG);
                 if(pParam[9] == -1)
                     break;
                 
@@ -644,7 +644,7 @@ int main(int argc, char** argv)
                             pFractalIterations, pParam[8], pParam[3]);
                 
                 // Send Back
-                MPI::COMM_WORLD.Send((void*)(pFractalIterations + ((int)pParam[0] * (int)pParam[3])), ((nScreenHeight*nScreenWidth)/nNodesSize), MPI::INT, 0, 0);
+                // MPI::COMM_WORLD.Send((void*)(pFractalIterations + ((int)pParam[0] * (int)pParam[3])), ((nScreenHeight*nScreenWidth)/nNodesSize), MPI::INT, 0, 0);
             }
 
             delete[] pFractalIterations;
@@ -652,8 +652,8 @@ int main(int argc, char** argv)
         }
 
         std::cout << "I node " << nMyRank << " am waiting for other nodes to finish...\n";
-        MPI::COMM_WORLD.Barrier();
-        MPI::Finalize();
+        // MPI::COMM_WORLD.Barrier();
+        // MPI::Finalize();
         std::cout << "All nodes has finish!\n";
     }
     return 0;

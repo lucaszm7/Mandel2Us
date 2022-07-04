@@ -1,4 +1,4 @@
-CXX = mpic++
+CXX = g++
 CXXFLAGS = -fopenmp
 LFLAGS = -lX11 -lGL -lpthread -lpng -lstdc++fs -std=c++17 -O3 -mavx2 
 FILE = Application
