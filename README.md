@@ -1,7 +1,12 @@
 # Fractal de Mandelbrot construido em C++ com MPI e OpenMP, e a parte gráfica com olcPixelGameEngine
 
+### Build: Linux
+ - make install
+ - make gen
+ - make run
+
 > ![Mandelbrot_Fractal__bigbig_adobe](https://user-images.githubusercontent.com/42661760/171764189-d58f25b9-5090-47b2-baf3-dd0992efab3b.gif)
-> [![Video!](https://img.youtube.com/vi/9-DVTdkkEjQ/0.jpg)](https://www.youtube.com/watch?v=9-DVTdkkEjQ)
+> - Video Showcase: https://www.youtube.com/watch?v=9-DVTdkkEjQ
 
 ## Features!
 
@@ -21,17 +26,6 @@
 > <img width="400" alt="image" src="https://user-images.githubusercontent.com/42661760/174455681-3162f7fc-3bd3-48ed-b245-c1dc7d482dd9.png">
 > <img width="399" alt="image" src="https://user-images.githubusercontent.com/42661760/174455767-94b58546-99e3-4f7e-83fb-34a4e0be868d.png">
 
-
-## Build para Linux
-> sudo apt-get install build-essential libglu1-mesa-dev libpng-dev
-
-## Compilar com Makefile
-Compilar && rodar
-> make
-
-## Rodar
-> make run
-
 ## Compilar Manualmente
 > mpic++ -fopenmp  Application.cpp -lX11 -lGL -lpthread -lpng -lstdc++fs -std=c++17 -o app
 
@@ -39,10 +33,11 @@ Compilar && rodar
 > mpirun --hostfile hosts ./app
 
 ## TODO:
-- Intrinsec Functions
 - CUDA(?)
 
 ## DONE:
+- UI
+- Intrinsec Functions
 - MakeFile
 - Separate regions of Mandelbrot Between computers
 - Already paralelize with OpenMP, but has to really get better.
