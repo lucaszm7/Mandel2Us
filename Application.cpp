@@ -550,9 +550,9 @@ public:
 
         DrawString(0, 10, calcName, color, 2);
 		DrawString(0, 35,"Modelo de programacao: " + std::to_string(nFracMode + 1) + "/ 3", color, 2);
-        DrawString(0, 60, "Tempo decorrido: " + std::to_string(fTime.count()) + "s", color, 2);
-		DrawString(0, 85, "Carga Computacional (iteracoes): " + std::to_string(nMaxIteration), colorIterations, 2);
-		DrawString(0, 110,"Coloracao: F" + std::to_string(nColorMode + 1) + "/ F3", fracCol, 2);
+		DrawString(0, 60, "Carga Computacional (iteracoes): " + std::to_string(nMaxIteration), colorIterations, 2);
+		DrawString(0, 85,"Coloracao: F" + std::to_string(nColorMode + 1) + "/ F3", fracCol, 2);
+        DrawString(0, 110, "Tempo decorrido: " + std::to_string(fTime.count()) + "s", color, 3);
 
 		DrawString(700, 10 + uiDist *  0, "Controles:" , olc::Pixel(0, 255, 47), 2);
 		DrawString(700, 10 + uiDist *  1, "Mover:" , olc::Pixel(2, 189, 36), 2);
