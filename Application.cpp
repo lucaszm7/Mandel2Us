@@ -2,6 +2,7 @@
 #include <iostream>
 #include <chrono>
 #include <immintrin.h>
+#include <fstream>
 
 // Parallelization Stuff
 #include <omp.h>
@@ -474,45 +475,111 @@ public:
         {
             case 0: 
                 // Render result to screen
-                #pragma omp parallel for
-                for (int x = 0; x < ScreenWidth(); x++)
+                if(toggleScreenShot)
                 {
-                    for (int y = 0; y < ScreenHeight(); y++)
+                    std::ofstream screenShot("screen_shot_" + std::to_string(nScreenShotCount++) +".ppm");
+                    screenShot << "P3\n" << std::to_string(ScreenHeight()) + " " + std::to_string(ScreenWidth()) + "\n" << "256\n";
+                    for (int x = 0; x < ScreenWidth(); x++)
                     {
-                        int n = pFractalIterations[x * ScreenHeight() + y];
-                        // Coloring Algorithm - Picked from https://solarianprogrammer.com/2013/02/28/mandelbrot-set-cpp-11/
-                        double t = (double)n/(double)nMaxIteration;
-                        // Use smooth polynomials for r, g, b
-                        int rr = (int)(9*(1-t)*t*t*t*255);
-                        int rg = (int)(15*(1-t)*(1-t)*t*t*255);
-                        int rb =  (int)(8.5*(1-t)*(1-t)*(1-t)*t*255);
-                        Draw(x, y, olc::Pixel(rr, rg, rb, 255));	
+                        for (int y = 0; y < ScreenHeight(); y++)
+                        {
+                            int n = pFractalIterations[x * ScreenHeight() + y];
+                            // Coloring Algorithm - Picked from https://solarianprogrammer.com/2013/02/28/mandelbrot-set-cpp-11/
+                            double t = (double)n/(double)nMaxIteration;
+                            // Use smooth polynomials for r, g, b
+                            int rr = (int)(9*(1-t)*t*t*t*255);
+                            int rg = (int)(15*(1-t)*(1-t)*t*t*255);
+                            int rb =  (int)(8.5*(1-t)*(1-t)*(1-t)*t*255);
+                            screenShot << rr << " " << rg << " " << rb << std::endl;
+                        }
                     }
-                } break;
+                    screenShot.close();
+                    toggleScreenShot = false;
+                }
+                else
+                {         
+                    #pragma omp parallel for
+                    for (int x = 0; x < ScreenWidth(); x++)
+                    {
+                        for (int y = 0; y < ScreenHeight(); y++)
+                        {
+                            int n = pFractalIterations[x * ScreenHeight() + y];
+                            // Coloring Algorithm - Picked from https://solarianprogrammer.com/2013/02/28/mandelbrot-set-cpp-11/
+                            double t = (double)n/(double)nMaxIteration;
+                            // Use smooth polynomials for r, g, b
+                            int rr = (int)(9*(1-t)*t*t*t*255);
+                            int rg = (int)(15*(1-t)*(1-t)*t*t*255);
+                            int rb =  (int)(8.5*(1-t)*(1-t)*(1-t)*t*255);
+                            Draw(x, y, olc::Pixel(rr, rg, rb, 255));
+                        }
+                    }
+                }
+                break;
 
             case 1:
-                #pragma omp parallel for
-                for (int x = 0; x < ScreenWidth(); x++)
+                if(toggleScreenShot)
                 {
-                    for (int y = 0; y < ScreenHeight(); y++)
+                    std::ofstream screenShot("screen_shot_" + std::to_string(nScreenShotCount++) +".ppm");
+                    screenShot << "P3\n" << std::to_string(ScreenHeight()) + " " + std::to_string(ScreenWidth()) + "\n" << "256\n";
+                    for (int x = 0; x < ScreenWidth(); x++)
                     {
-                        int i = pFractalIterations[x * ScreenHeight() + y];
-                        float n = (float)i;
-                        float a = 0.1f;
-                        // Coloring Algorithm - Picked from - @Eriksonn
-                        Draw(x, y, olc::PixelF(0.5f * sin(a * n) + 0.5f, 0.5f * sin(a * n + 2.094f) + 0.5f,  0.5f * sin(a * n + 4.188f) + 0.5f));
+                        for (int y = 0; y < ScreenHeight(); y++)
+                        {
+                            int n = pFractalIterations[x * ScreenHeight() + y];
+                            if (n == nMaxIteration)
+                                screenShot << 0 << " " << 0 << " " << 0 << std::endl;
+                            else
+                                screenShot << n << " " << n << " " << n << std::endl;
+                        }
                     }
-                } break;
+                    screenShot.close();
+                    toggleScreenShot = false;
+                }
+                else
+                {
+                    #pragma omp parallel for
+                    for (int x = 0; x < ScreenWidth(); x++)
+                    {
+                        for (int y = 0; y < ScreenHeight(); y++)
+                        {
+                            int n = pFractalIterations[x * ScreenHeight() + y];
+                            if (n == nMaxIteration)
+                                Draw(x, y, olc::Pixel(0,0,0));
+                            else
+                                Draw(x, y, olc::Pixel(n,n,n));
+                        }
+                    }
+                } 
+                break;
             case 2:
-                #pragma omp parallel for
-                for (int x = 0; x < ScreenWidth(); x++)
+                if(toggleScreenShot)
                 {
-                    for (int y = 0; y < ScreenHeight(); y++)
+                    std::ofstream screenShot("screen_shot_" + std::to_string(nScreenShotCount++) +".ppm");
+                    screenShot << "P3\n" << std::to_string(ScreenHeight()) + " " + std::to_string(ScreenWidth()) + "\n" << "256\n";
+                    for (int x = 0; x < ScreenWidth(); x++)
                     {
-                        int n = pFractalIterations[x * ScreenHeight() + y];
-                        Draw(x, y, olc::Pixel(n*n, n, n*3, 255));
+                        for (int y = 0; y < ScreenHeight(); y++)
+                        {
+                            int n = pFractalIterations[x * ScreenHeight() + y];
+                            screenShot << n*n << " " << n << " " << n*3 << std::endl;
+                        }
                     }
-                } break;
+                    screenShot.close();
+                    toggleScreenShot = false;
+                }
+                else
+                {
+                    #pragma omp parallel for
+                    for (int x = 0; x < ScreenWidth(); x++)
+                    {
+                        for (int y = 0; y < ScreenHeight(); y++)
+                        {
+                            int n = pFractalIterations[x * ScreenHeight() + y];
+                            Draw(x, y, olc::Pixel(n*n, n, n*3, 255));
+                        }
+                    } 
+                }
+                break;
         }
 
         
