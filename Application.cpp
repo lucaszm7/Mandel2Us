@@ -3,6 +3,7 @@
 #include <chrono>
 #include <immintrin.h>
 #include <fstream>
+#include <cstdlib>
 
 // Parallelization Stuff
 #include <omp.h>
@@ -321,7 +322,7 @@ protected:
     bool toggleHelp = true;
     bool toggleScreenShotView = false;
     bool toggleScreenShot = false;
-    unsigned int nScreenShotCount = 0;
+    int nScreenShotCount = 0;
 
     std::string calcName;
     olc::Pixel color;
@@ -336,6 +337,10 @@ protected:
 public:
 	bool OnUserCreate() override
 	{
+        char* ssc = getenv("SCREENSHOTCOUNT");
+        if(ssc)
+            nScreenShotCount = atoi(ssc);
+
 		nWidth = ScreenWidth();
         nHeight = ScreenHeight();
         pFractalIterations = new int[ScreenWidth() * ScreenHeight()]{ 0 };
@@ -683,6 +688,7 @@ public:
         for(int i = 0; i < nNodesSize; ++i)
             delete[] pNodesParam[i];
         delete[] pNodesParam;
+        setenv("SCREENSHOTCOUNT", std::to_string(nScreenShotCount).c_str(), 1);
     }
 
 // Pan and Zoom Created with help of tutorials on channel @OneLoneCoder
