@@ -529,7 +529,10 @@ public:
                             if (n == nMaxIteration)
                                 screenShot << 0 << " " << 0 << " " << 0 << std::endl;
                             else
+                            {
+                                n = n % 255;
                                 screenShot << n << " " << n << " " << n << std::endl;
+                            }
                         }
                     }
                     screenShot.close();
@@ -561,7 +564,7 @@ public:
                         for (int y = 0; y < ScreenHeight(); y++)
                         {
                             int n = pFractalIterations[x * ScreenHeight() + y];
-                            screenShot << n*n << " " << n << " " << n*3 << std::endl;
+                            screenShot << (n*n)%255 << " " << (n)%255 << " " << (n*3)%255 << std::endl;
                         }
                     }
                     screenShot.close();
