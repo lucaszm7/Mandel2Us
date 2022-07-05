@@ -669,7 +669,7 @@ public:
 
         if(!toggleScreenShotView)
         {
-            FillRect({0, ScreenHeight() - 85}, {440, 60}, olc::VERY_DARK_BLUE);
+            FillRect({0, ScreenHeight() - 85}, {440, 85}, olc::VERY_DARK_BLUE);
             DrawString(10, ScreenHeight() - 75, "I - Mostra Benchmark", olc::WHITE, 2);
             DrawString(10, ScreenHeight() - 50, "H - Para controles e ajuda", olc::WHITE, 2);
             DrawString(10, ScreenHeight() - 25, "P - Print Screen", olc::WHITE, 2);
