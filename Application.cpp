@@ -315,6 +315,13 @@ protected:
 
 // UI variables
 protected:
+
+    bool toggleBenchmark = true;
+    bool toggleHelp = true;
+    bool toggleScreenShotView = false;
+    bool toggleScreenShot = false;
+    unsigned int nScreenShotCount = 0;
+
     std::string calcName;
     olc::Pixel color;
     olc::Pixel fracModeColor[3];
@@ -400,6 +407,13 @@ public:
         olc::vd2d frac_imag;
 
         ScreenToFrac(pixel_tl, pixel_br, frac_tl, frac_br, frac_real, frac_imag);
+
+        //Toggles
+        if(GetKey(olc::Key::H).bPressed) { toggleHelp = !toggleHelp; }
+        if(GetKey(olc::Key::I).bPressed) { toggleBenchmark = !toggleBenchmark; }
+        if(GetKey(olc::Key::S).bPressed) { toggleScreenShotView = !toggleScreenShotView; }
+        if(GetKey(olc::Key::P).bPressed) { toggleScreenShot = !toggleScreenShot; }
+        
 
         // Calculation Option
         if (GetKey(olc::Key::K1).bPressed) { nFracMode = 0; }
@@ -536,7 +550,7 @@ public:
         else if(nColorMode == 1)
         {
             fracColorCol[0] = olc::WHITE;
-            fracCol = fracColorCol[1] = olc::MAGENTA;
+            fracCol = fracColorCol[1] = olc::DARK_GREY;
             fracColorCol[2] = olc::WHITE;
         }
         else if(nColorMode == 2)
@@ -548,30 +562,49 @@ public:
 
         constexpr int uiDist = 25;
 
-        DrawString(0, 10, calcName, color, 2);
-		DrawString(0, 35,"Modelo de programacao: " + std::to_string(nFracMode + 1) + "/ 3", color, 2);
-		DrawString(0, 60, "Carga Computacional (iteracoes): " + std::to_string(nMaxIteration), colorIterations, 2);
-		DrawString(0, 85,"Coloracao: F" + std::to_string(nColorMode + 1) + "/ F3", fracCol, 2);
-        DrawString(0, 110, "Tempo decorrido: " + std::to_string(fTime.count()) + "s", color, 3);
+        if(toggleBenchmark)
+        {
+            DrawString(0, 10, calcName, color, 2);
+            DrawString(0, 35,"Modelo de programacao: " + std::to_string(nFracMode + 1) + "/ 3", color, 2);
+            DrawString(0, 60, "Carga Computacional (iteracoes): " + std::to_string(nMaxIteration), colorIterations, 2);
+            DrawString(0, 85,"Coloracao: F" + std::to_string(nColorMode + 1) + "/ F3", fracCol, 2);
+            DrawString(0, 110, "Tempo decorrido: " + std::to_string(fTime.count()) + "s", color, 3);
+        }
+        
+        if(toggleHelp)
+        {
+            DrawString(700, 10 + uiDist *  0, "Controles:" , olc::Pixel(0, 255, 47), 2);
+            DrawString(700, 10 + uiDist *  1, "Mover:" , olc::Pixel(2, 189, 36), 2);
+            DrawString(700, 10 + uiDist *  2, "Segurar e Arrastar com mouse" , mouseColor, 2);
+            DrawString(700, 10 + uiDist *  3, "Zoom:" , olc::Pixel(2, 189, 36), 2);
+            DrawString(700, 10 + uiDist *  4, "Tecla: E - Zoom In" , zoomColor[0], 2);
+            DrawString(700, 10 + uiDist *  5, "Tecla: Q - Zoom Out" , zoomColor[1], 2);
+            DrawString(700, 10 + uiDist *  6, "Mudar carga computacional (iteracoes):" , olc::Pixel(2, 189, 36), 2);
+            DrawString(700, 10 + uiDist *  7, "Tecla: UP " , olc::WHITE, 2);
+            DrawString(700, 10 + uiDist *  8, "Tecla: DOWN " , olc::WHITE, 2);
+            DrawString(700, 10 + uiDist *  9, "Mudar o modelo de programacao:" , olc::Pixel(2, 189, 36), 2);
+            DrawString(700, 10 + uiDist * 10, "Tecla: 1 - Sequencial" , fracModeColor[0], 2);
+            DrawString(700, 10 + uiDist * 11, "Tecla: 2 - Paralelo" , fracModeColor[1], 2);
+            DrawString(700, 10 + uiDist * 12, "Tecla: 3 - Paralelo c/ Instruc. Vet." , fracModeColor[2], 2);
+            DrawString(700, 10 + uiDist * 13, "Mudar o modelo de coloracao:" , olc::Pixel(2, 189, 36), 2);
+            DrawString(700, 10 + uiDist * 14, "Tecla: F1 - Azul" , fracColorCol[0], 2);
+            DrawString(700, 10 + uiDist * 15, "Tecla: F2 - Cinza" , fracColorCol[1], 2);
+            DrawString(700, 10 + uiDist * 16, "Tecla: F3 - Vermelho." , fracColorCol[2], 2);
+        }
 
-		DrawString(700, 10 + uiDist *  0, "Controles:" , olc::Pixel(0, 255, 47), 2);
-		DrawString(700, 10 + uiDist *  1, "Mover:" , olc::Pixel(2, 189, 36), 2);
-		DrawString(700, 10 + uiDist *  2, "Segurar e Arrastar com mouse" , mouseColor, 2);
-		DrawString(700, 10 + uiDist *  3, "Zoom:" , olc::Pixel(2, 189, 36), 2);
-		DrawString(700, 10 + uiDist *  4, "Tecla: E - Zoom In" , zoomColor[0], 2);
-		DrawString(700, 10 + uiDist *  5, "Tecla: Q - Zoom Out" , zoomColor[1], 2);
-		DrawString(700, 10 + uiDist *  6, "Mudar carga computacional (iteracoes):" , olc::Pixel(2, 189, 36), 2);
-		DrawString(700, 10 + uiDist *  7, "Tecla: UP " , olc::WHITE, 2);
-		DrawString(700, 10 + uiDist *  8, "Tecla: DOWN " , olc::WHITE, 2);
-		DrawString(700, 10 + uiDist *  9, "Mudar o modelo de programacao:" , olc::Pixel(2, 189, 36), 2);
-		DrawString(700, 10 + uiDist * 10, "Tecla: 1 - Sequencial" , fracModeColor[0], 2);
-		DrawString(700, 10 + uiDist * 11, "Tecla: 2 - Paralelo" , fracModeColor[1], 2);
-		DrawString(700, 10 + uiDist * 12, "Tecla: 3 - Paralelo c/ Instruc. Vet." , fracModeColor[2], 2);
-		DrawString(700, 10 + uiDist * 13, "Mudar o modelo de coloracao:" , olc::Pixel(2, 189, 36), 2);
-		DrawString(700, 10 + uiDist * 14, "Tecla: F1 - Azul" , fracColorCol[0], 2);
-		DrawString(700, 10 + uiDist * 15, "Tecla: F2 - Rosa" , fracColorCol[1], 2);
-		DrawString(700, 10 + uiDist * 16, "Tecla: F3 - Vermelho." , fracColorCol[2], 2);
-		return true;
+        if(!toggleScreenShotView)
+        {
+            FillRect({0, ScreenHeight() - 85}, {440, 60}, olc::VERY_DARK_BLUE);
+            DrawString(10, ScreenHeight() - 75, "I - Mostra Benchmark", olc::WHITE, 2);
+            DrawString(10, ScreenHeight() - 50, "H - Para controles e ajuda", olc::WHITE, 2);
+            DrawString(10, ScreenHeight() - 25, "P - Print Screen", olc::WHITE, 2);
+        }
+		else
+            toggleBenchmark = toggleHelp = false;
+
+        DrawString(ScreenWidth() - 630, ScreenHeight() - 30, "Mandel2U - github.com/lucaszm7/Mandel2U", olc::Pixel(255,255,255,123), 2);
+        
+        return true;
 	}
 
     ~MandelbrotFractal()
