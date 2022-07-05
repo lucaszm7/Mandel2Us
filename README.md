@@ -5,6 +5,9 @@
  - $> make gen
  - $> make run
  
+ ## Build Windows (with Msys2 + mingw-64)
+ - $> g++ -fopenmp Application.cpp -luser32 -lgdi32 -lopengl32 -lgdiplus -lShlwapi -ldwmapi -lstdc++fs -static -std=c++17 -O3 -mavx2  -o app
+ 
 ---
 
 ![Mandelbrot_Fractal__bigbig_adobe](https://user-images.githubusercontent.com/42661760/171764189-d58f25b9-5090-47b2-baf3-dd0992efab3b.gif)
