@@ -640,10 +640,11 @@ public:
         if(toggleBenchmark)
         {
             DrawString(0, 10, calcName, color, 2);
-            DrawString(0, 35,"Modelo de programacao: " + std::to_string(nFracMode + 1) + "/ 3", color, 2);
-            DrawString(0, 60, "Carga Computacional (iteracoes): " + std::to_string(nMaxIteration), colorIterations, 2);
-            DrawString(0, 85,"Coloracao: F" + std::to_string(nColorMode + 1) + "/ F3", fracCol, 2);
+            DrawString(0, 35,  "Modelo de programacao: " + std::to_string(nFracMode + 1) + "/ 3", color, 2);
+            DrawString(0, 60,  "Carga Computacional (iteracoes): " + std::to_string(nMaxIteration), colorIterations, 2);
+            DrawString(0, 85,  "Coloracao: F" + std::to_string(nColorMode + 1) + "/ F3", fracCol, 2);
             DrawString(0, 110, "Tempo decorrido: " + std::to_string(fTime.count()) + "s", color, 3);
+            DrawString(0, 145, "FPS: " + std::to_string(1/fTime.count()) + "", color, 3);
         }
         
         if(toggleHelp)
@@ -670,7 +671,7 @@ public:
         if(!toggleScreenShotView)
         {
             FillRect({0, ScreenHeight() - 85}, {440, 85}, olc::VERY_DARK_BLUE);
-            DrawString(10, ScreenHeight() - 75, "I - Mostra Benchmark", olc::WHITE, 2);
+            DrawString(10, ScreenHeight() - 75, "I - Mostrar Benchmarks", olc::WHITE, 2);
             DrawString(10, ScreenHeight() - 50, "H - Para controles e ajuda", olc::WHITE, 2);
             DrawString(10, ScreenHeight() - 25, "P - Print Screen", olc::WHITE, 2);
         }
