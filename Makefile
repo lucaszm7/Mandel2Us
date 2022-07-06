@@ -21,7 +21,7 @@ run: app hosts
 	mpirun --hostfile hosts ./app
 
 install:
-	sudo apt-get install build-essential libglu1-mesa-dev libpng-dev
+	sudo apt-get install build-essential libglu1-mesa-dev libpng-dev libmpich12
 
 clean:
 	rm -rf *.o
