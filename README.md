@@ -18,9 +18,14 @@
    make run
    ```
    
- ## Build Windows - Branch without-MPI (with Msys2 + mingw-64)
+ ## Build Windows - Branch without-MPI ()
+  - Com Msys2 + mingw-64
    ```
-   $ g++ -fopenmp Application.cpp -luser32 -lgdi32 -lopengl32 -lgdiplus -lShlwapi -ldwmapi -lstdc++fs -static -std=c++17 -O3 -mavx2  -o app
+   g++ -fopenmp Application.cpp -luser32 -lgdi32 -lopengl32 -lgdiplus -lShlwapi -ldwmapi -lstdc++fs -static -std=c++17 -O3 -mavx2  -o app
+   ```
+  - Com MSVC (Alpha)
+   ```
+   cl /EHsc /openmp:llvm /O2 /Ot /std:c++17 /arch:AVX2 Application.cpp
    ```
  
 ---
