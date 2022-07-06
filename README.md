@@ -18,18 +18,22 @@
 ### Clusterization with MPI!
 > Dynamically divide the fractal in N nodes, beeing N <= Screen Width
 > Return the value from each nodes to the master node
+
 ### Parallelization with OpenMP!
 > Dynamic divide the portion of the fractal in each node, using MPI
 
 ### Multi-PLataform Rendering!
 > Using olcPixelGameEngine to Draw the fractal in a window!
+
 ### Handle pan and Zoom!
 > Implemented pan and zoom in the fractal, supporting before features!
+
 ### Different coloring algorithms:
-> <img width="399" alt="image" src="https://user-images.githubusercontent.com/42661760/174455667-a2f3f7c1-568b-43c5-bef0-83225e35b7d7.png">
-> <img width="401" alt="image" src="https://user-images.githubusercontent.com/42661760/174455671-e1e14f78-8cbb-4af5-b087-adaeeb5d8b4b.png">
-> <img width="400" alt="image" src="https://user-images.githubusercontent.com/42661760/174455681-3162f7fc-3bd3-48ed-b245-c1dc7d482dd9.png">
-> <img width="399" alt="image" src="https://user-images.githubusercontent.com/42661760/174455767-94b58546-99e3-4f7e-83fb-34a4e0be868d.png">
+![screen_shot_0](https://user-images.githubusercontent.com/42661760/177466041-be9d8a8d-4bec-4a08-9712-f9325af655a4.png)
+> <img width="599" alt="_mandel2us_print_mark_2" src="https://user-images.githubusercontent.com/42661760/177465943-2001bb61-cc1e-4e23-86af-1db0c15bf034.png">
+![screen_shot_1_](https://user-images.githubusercontent.com/42661760/177465956-ebf08e27-6543-49bf-9ab3-b616c5a6d45c.png)
+![screen_shot_2](https://user-images.githubusercontent.com/42661760/177465979-8228379d-23e2-43e4-a7d4-bf00e6678661.png)
+![screen_shot_06](https://user-images.githubusercontent.com/42661760/177466011-29821b44-ccf8-41a8-838c-b391c32974a6.png)
 
 ## Compilar Manualmente
 > mpic++ -fopenmp  Application.cpp -lX11 -lGL -lpthread -lpng -lstdc++fs -std=c++17 -o app
