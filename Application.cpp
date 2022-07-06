@@ -678,7 +678,7 @@ public:
 		else
             toggleBenchmark = toggleHelp = false;
 
-        DrawString(ScreenWidth() - 630, ScreenHeight() - 30, "Mandel2U - github.com/lucaszm7/Mandel2U", olc::Pixel(255,255,255,123), 2);
+        DrawString(ScreenWidth() - 660, ScreenHeight() - 30, "Mandel2Us - github.com/lucaszm7/Mandel2Us", olc::Pixel(255,255,255,123), 2);
         
         return true;
 	}
