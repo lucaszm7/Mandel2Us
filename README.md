@@ -25,7 +25,7 @@
    ```
   - Com MSVC (Alpha)
    ```
-   cl /EHsc /openmp:llvm /O2 /Ot /std:c++17 /arch:AVX2 Application.cpp
+   cl /EHsc /openmp /O2 /Ot /std:c++17 /arch:AVX2 Application.cpp
    ```
  
 ---
