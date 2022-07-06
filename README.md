@@ -1,12 +1,27 @@
 # Fractal de Mandelbrot construido em C++ com MPI e OpenMP, e a parte gráfica com olcPixelGameEngine
 
 ## Build: Linux
- - $> make install
- - $> make gen
- - $> make run
- 
- ## Build Windows (with Msys2 + mingw-64)
- - $> g++ -fopenmp Application.cpp -luser32 -lgdi32 -lopengl32 -lgdiplus -lShlwapi -ldwmapi -lstdc++fs -static -std=c++17 -O3 -mavx2  -o app
+ 1. Clone o repositório
+   ```
+   git clone https://github.com/lucaszm7/Mandel2Us.git
+   ```
+ 2. Instale as dependências
+   ```
+   make install
+   ```
+ 3. Compile o Programa 
+   ```
+   make gen
+   ```
+ 4. Rode :)
+   ```
+   make run
+   ```
+   
+ ## Build Windows - Branch without-MPI (with Msys2 + mingw-64)
+   ```
+   $ g++ -fopenmp Application.cpp -luser32 -lgdi32 -lopengl32 -lgdiplus -lShlwapi -ldwmapi -lstdc++fs -static -std=c++17 -O3 -mavx2  -o app
+   ```
  
 ---
 
