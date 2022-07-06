@@ -7,13 +7,35 @@
 
 // Parallelization Stuff
 #include <omp.h>
-#include <pthread.h>
 
-#if defined(_WIN32)
-        using MPI::Init() = {};
-        using MPI::Finalize() = {};
+#if defined _WIN32
+        #include <intrin.h>
+        namespace MPI
+        {
+            void Init(int &, char **& ){}
+            void Finalize( void ){}
+            struct nan 
+            {
+                int Get_size( void ) const { return 1; }
+                int Get_rank( void ) const { return 0; }
+                void Send( const void * v1, int v2, double v3, int v4, int v5 ) const {}
+                void Send( const void * v1, int v2,  int v3, int v4, int v5 ) const {}
+                void Send( const void * v1, int v2,  float v3, int v4, int v5 ) const {}
+                void Recv( void * v1, int v2, int v3, int v4, int v5 ) const {}
+                void Barrier( void ) const {}
+            };
+            struct Datatype {};
+            nan COMM_WORLD;
+            double DOUBLE;
+            int INT;
+            float FLOAT;
+            int ANY_TAG;
+        }
+        int setenv (const char *__name, const char *__value, int __replace) { return 0; }
 #endif
-#if defined(__linux__) || defined(__MINGW32__) || defined(__EMSCRIPTEN__) || defined(__FreeBSD__) || defined(__APPLE__)
+
+#ifndef _WIN32
+    #include <pthread.h>
     #include "mpi.h"
 #endif
 
@@ -202,9 +224,10 @@ void CreateFractalParallelAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_
     // | 4.0 | 4.0 | 4.0 | 4.0 | 
     _four = _mm256_set1_pd(4.0);
 
+    auto numProcs = omp_get_num_procs();
+
     auto CHUNK = (pixel_br.x - pixel_tl.x) / 128;
-    #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(omp_get_num_procs()) \
-                             private(_n)
+    #pragma omp parallel for schedule(dynamic, CHUNK) num_threads(numProcs) private(_n, _y_pos, x_pos, _c, _ca, _cb, _a, _b, _aa, _bb, _zr2, _zi2, _mask1, _mask2)
     for (int x = pixel_tl.x; x < (pixel_br.x - 1); x++)
     {
         // Calc start x
@@ -288,11 +311,18 @@ void CreateFractalParallelAVX(const olc::vi2d& pixel_tl, const olc::vi2d& pixel_
             if (_mm256_movemask_pd(_mm256_castsi256_pd(_mask2)) > 0)
                 goto repeat;
 
-            pFractalIterations[(x * nScreenHeightSize) + y + 0] = int(_n[3]);
-            pFractalIterations[(x * nScreenHeightSize) + y + 1] = int(_n[1]);
-            pFractalIterations[(x * nScreenHeightSize) + y + 2] = int(_n[2]);
-            pFractalIterations[(x * nScreenHeightSize) + y + 3] = int(_n[0]);
-
+            #if defined _WIN32
+                pFractalIterations[(x * nScreenHeightSize) + y + 0] = int(_n.m256i_i64[3]);
+                pFractalIterations[(x * nScreenHeightSize) + y + 1] = int(_n.m256i_i64[1]);
+                pFractalIterations[(x * nScreenHeightSize) + y + 2] = int(_n.m256i_i64[2]);
+                pFractalIterations[(x * nScreenHeightSize) + y + 3] = int(_n.m256i_i64[0]);
+            #endif
+            #ifndef _WIN32
+                pFractalIterations[(x * nScreenHeightSize) + y + 0] = int(_n[3]);
+                pFractalIterations[(x * nScreenHeightSize) + y + 1] = int(_n[1]);
+                pFractalIterations[(x * nScreenHeightSize) + y + 2] = int(_n[2]);
+                pFractalIterations[(x * nScreenHeightSize) + y + 3] = int(_n[0]);
+            #endif
             _y_pos = _mm256_add_pd(_y_pos, _y_jump);
         }
         // x_pos += x_scale;
